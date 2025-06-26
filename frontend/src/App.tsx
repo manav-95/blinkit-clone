@@ -39,7 +39,7 @@ function App() {
       <div className="relative h-screen w-full">
         {displayNav
           ?
-          <div className="min-h-[5.3rem] mb-1">
+          <div className="min-h-[5.3rem] mb-0">
             <Navbar />
           </div>
           : <></>

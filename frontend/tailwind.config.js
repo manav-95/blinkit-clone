@@ -1,28 +1,31 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-   content: [
+  content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-   extend: {
+    extend: {
       fontFamily: {
         gilroy: ['Gilroy', '"Helvetica Neue"'],
         okraish: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
         poppins: ["Poppins", 'sans-serif'],
       },
-      textColor:{
+      textColor: {
         green: "#3AB757",
         darkGreen: "#318616",
       },
-      backgroundColor:{
+      backgroundColor: {
         darkGreen: "#318616",
+        lightGray: "#f8f8f8",
       },
-      borderColor:{
+      borderColor: {
         darkGreen: "#318616",
       }
     },
   },
-  plugins: [],
+  plugins: [
+     require('tailwind-scrollbar'),
+  ],
 }
 
