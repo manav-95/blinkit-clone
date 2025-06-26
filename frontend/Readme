@@ -1,0 +1,8 @@
+    <div className="flex items-center space-x-1 min-w-[550px] poppins mb-3.5">
+                                    <span>Welcome to</span>
+                                    <span className="text-darkGreen">shopit</span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-lg poppins">processing</span>
+                                    <div className="h-5 w-5 border-4 border-darkGreen border-t-transparent rounded-full animate-spin"></div>
+                                </div>
