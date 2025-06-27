@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 
 import { useCart } from '../contexts/CartContext'
 import { FaX } from 'react-icons/fa6';
@@ -16,7 +16,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 const Cart = () => {
 
-    const { cartOpen, setCartOpen, cart, updateQuantity, discountedTotalPrice, orignalTotal, savedAmount, DeliveryCharge } = useCart();
+    const { cartOpen, setCartOpen, cart, updateQuantity, discountedTotalPrice, originalTotal, savedAmount, DeliveryCharge } = useCart();
     const { estimatedTime } = useLocation();
 
     const { setLoginBox } = useAuth();
@@ -105,7 +105,7 @@ const Cart = () => {
                                     </div>
                                 </div>
 
-                                {/* Qunantity Increment And Decrement Button */}
+                                {/* Quantity Increment And Decrement Button */}
                                 <div className='col-span-3 flex items-center justify-center'>
                                     <div
                                         className="min-w-16 flex justify-between items-center bg-darkGreen text-white font-medium text-sm py-0 border rounded-md border-[#318616]"
@@ -135,8 +135,8 @@ const Cart = () => {
                                         }
                                     </span>
                                     <div className='flex items-center'>
-                                        {orignalTotal &&
-                                            <span className='mr-1 line-through text-gray-500 text-sm'>₹{orignalTotal}</span>
+                                        {originalTotal &&
+                                            <span className='mr-1 line-through text-gray-500 text-sm'>₹{originalTotal}</span>
                                         }
                                         <span className='text-sm'>₹{discountedTotalPrice}</span>
                                     </div>

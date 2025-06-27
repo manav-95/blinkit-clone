@@ -6,27 +6,24 @@ import type { Swiper as SwiperType } from 'swiper';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 
-import { useLocation } from "../contexts/LocationContext";
-import { formatDeliveryTime } from "../utils/FormatDeliveryTime";
-
 import { useCart } from "../contexts/CartContext";
 
-import { LuTimer } from "react-icons/lu"
-import { FaChevronLeft, FaChevronRight, FaMinus, FaPlus } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 import { products } from "../data/productData";
+import ProductCard from "./ProductCard";
+
+import { type CartItemType } from "../types/CartItemType";
 
 
 interface ProductCarouselProps {
     title: string;
-    path: string;
+    category: string;
 }
 
-const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, path }) => {
+const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, category }) => {
 
-    const { estimatedTime } = useLocation();
-    const { cart, addToCart, updateQuantity } = useCart();
-
+    const { cart } = useCart();
 
     const navigate = useNavigate();
 
@@ -35,8 +32,8 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, path }) => {
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
 
-    const slidesPerGroup = 2;
-    const slidesPerView = 2;
+    const slidesPerGroup = 6;
+    const slidesPerView = 6;
 
     const totalSlides = products.length;
 
@@ -44,18 +41,16 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, path }) => {
     const isAtEnd = activeIndex + slidesPerView >= totalSlides;
 
 
-
-
     return (
         <>
             <div className="max-w-7xl mx-auto px-4 my-3">
 
                 <div className="flex justify-between items-center">
-                    <h1 className="poppins font-semibold text-3xl">{title}</h1>
-                    <button onClick={() => navigate(`${path}`)} className="text-green text-xl font-medium">see all</button>
+                    <h1 className="poppins font-semibold text-2xl">{title}</h1>
+                    <button onClick={() => navigate(`${`cn/${category}`}`)} className="text-green text-xl font-medium">see all</button>
                 </div>
 
-                <div className="relative px-0 my-2">
+                <div className="relative px-0">
 
                     {/* Left Button */}
                     {!isAtStart && (
@@ -90,7 +85,10 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, path }) => {
                         spaceBetween={15}
                         speed={500}
                         breakpoints={{
-
+                            0: {
+                                slidesPerView: 2,
+                                slidesPerGroup: 2,
+                            },
                             640: {
                                 slidesPerView: 2,
                                 slidesPerGroup: 2,
@@ -108,78 +106,38 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, path }) => {
                                 slidesPerGroup: 6,
                             },
                         }}
-                        className="flex flex-col"
+                        className=""
                     >
-                        {products.map((product) => {
-                            const cartItem = cart.find((item) => item.id === product.id);
-                            return (
-                                <SwiperSlide
-                                    key={product.id}
-                                    className="shadow-md border rounded-md my-6"
-                                >
-                                    <div
-                                        className="flex flex-col h-[315px] p-1"
+                        {products
+                            .filter((product) => product.category === category)
+                            .map((product) => {
+                                const cartItem: CartItemType = cart.find((item) => item.id === product.id) ?? {
+                                    id: product.id,
+                                    productName: product.productName ?? "",
+                                    productPrice: product.discountPrice ?? 0,
+                                    productMrp: product?.mrp,
+                                    productImage: product.productImage ?? "",
+                                    unit: product.unit ?? "",
+                                    quantity: 0,
+                                };
+                                return (
+                                    <SwiperSlide
+                                        key={product.id}
+                                        className="my-4"
                                     >
-                                        <div className="p-1">
-                                            <img src={product.productImage} className="h-36 w-full object-cover" />
-                                        </div>
-                                        <div className="p-3 flex flex-col justify-between flex-1">
-                                            <div className="flex items-center space-x-1 bg-[#f8f8f8] rounded w-fit px-1 py-0.5">
-                                                <LuTimer className="h-3 w-3 flex-shrink-0" />
-                                                <span className="text-[9px] font-okraish font-bold uppercase tracking-wide text-gray-900">{estimatedTime ? `${formatDeliveryTime(parseInt(estimatedTime))}` : `8 mins`}</span>
-                                            </div>
-                                            <span className="font-sans font-semibold text-sm line-clamp-2 mt-1 ">{product.productName}</span>
-                                            <div className="mt-auto">
-                                                <span className="text-xs text-gray-500">{product.unit}</span>
-                                                <div className="flex justify-between items-center mt-2">
-                                                    {product.mrp ? (
-                                                        <>
-                                                            <div className="flex flex-col justify-center">
-                                                                <span className="font-semibold text-xs">₹{product.discountPrice}</span>
-                                                                <span className="font-semibold text-xs line-through text-gray-500">₹{product.mrp}</span>
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <span className="font-semibold text-xs">₹{product.discountPrice}</span>
-                                                        </>
-                                                    )}
-
-                                                    {cartItem ? (
-                                                        <>
-                                                            <div
-                                                                className="min-w-16 flex justify-between items-center bg-darkGreen text-white font-medium text-sm py-0 border rounded-md border-[#318616]"
-                                                            >
-                                                                <button onClick={() => updateQuantity(product.id, cartItem.quantity - 1)} className="px-2 py-[9px]"><FaMinus className="h-2.5 w-2.5 flex-shrink-0" /></button>
-                                                                <span>{cartItem?.quantity}</span>
-                                                                <button onClick={() => updateQuantity(product.id, cartItem.quantity + 1)} className="px-2 py-[9px]"><FaPlus className="h-2.5 w-2.5 flex-shrink-0" /></button>
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <button
-                                                                onClick={() => addToCart({
-                                                                    id: product.id,
-                                                                    productName: product.productName,
-                                                                    productPrice: product.discountPrice,
-                                                                    productMrp: product.mrp,
-                                                                    productImage: product.productImage,
-                                                                    quantity: 1,
-                                                                    unit: product.unit,
-                                                                })}
-                                                                className="min-w-16 text-darkGreen font-medium text-sm py-1 px-4 border rounded-md border-[#318616] bg-[#f7fff9]"
-                                                            >
-                                                                ADD
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </SwiperSlide>
-                            )
-                        })}
+                                        <ProductCard
+                                            id={product.id}
+                                            image={product.productImage}
+                                            name={product.productName}
+                                            mrp={product.mrp}
+                                            discountPrice={product.discountPrice}
+                                            unit={product.unit}
+                                            quantity={cartItem.quantity}
+                                            cartItem={cartItem}
+                                        />
+                                    </SwiperSlide>
+                                )
+                            })}
                     </Swiper >
                 </div >
 

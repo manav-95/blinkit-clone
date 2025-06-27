@@ -60,8 +60,8 @@ const Home = () => {
           ))}
         </div>
 
-        <ProductCarousel title={"Dairy, Bread & Eggs"} path={'/all'} />
-        <ProductCarousel title={"Fruits & Vegetables"} path={'/all-pr'} />
+        <ProductCarousel category={"dairy breakfast"} title={"Dairy, Bread & Eggs"} />
+        <ProductCarousel category={"candies & gums"} title={"Candies & Gums"} />
 
       </div>
     </>

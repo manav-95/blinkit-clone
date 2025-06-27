@@ -1,25 +1,19 @@
 import React, { createContext, useContext, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
-interface CartItem {
-    id: number;
-    productName: string;
-    productPrice: number;
-    productMrp?: number;
-    productImage: string;
-    quantity: number;
-    unit: string;
-}
+
+import { type CartItemType } from "../types/CartItemType";
+
 
 interface CartContextType {
-    cart: CartItem[];
-    setCart: Dispatch<SetStateAction<CartItem[]>>;
+    cart: CartItemType[];
+    setCart: Dispatch<SetStateAction<CartItemType[]>>;
     cartOpen: boolean;
     setCartOpen: Dispatch<SetStateAction<boolean>>;
-    addToCart: (item: CartItem) => void;
+    addToCart: (item: CartItemType) => void;
     updateQuantity: (id: number, newQuantity: number) => void;
     totalCartItems: number;
     discountedTotalPrice: number;
-    orignalTotal: number | null;
+    originalTotal?: number | null;
     savedAmount: number;
     DeliveryCharge: number;
 }
@@ -27,7 +21,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-    const [cart, setCart] = useState<CartItem[]>(() => {
+    const [cart, setCart] = useState<CartItemType[]>(() => {
         const storedCart = localStorage.getItem("cart");
         return storedCart ? JSON.parse(storedCart) : [];
     });
@@ -39,14 +33,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     const hasMrp = cart.some(item => item.productMrp && item.productMrp > item.productPrice)
 
-    const orignalTotal = hasMrp
+    const originalTotal = hasMrp
         ? cart.reduce((sum, item) => {
             const basePrice = item.productMrp ?? item.productPrice;
             return sum + basePrice * item.quantity;
         }, 0)
         : null;
 
-    const savedAmount = orignalTotal - discountedTotalPrice;
+    const savedAmount = originalTotal - discountedTotalPrice;
     const DeliveryCharge = 25;
 
 
@@ -54,7 +48,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem("cart", JSON.stringify(cart));
     }, [cart])
 
-    const addToCart = (item: CartItem) => {
+    const addToCart = (item: CartItemType) => {
         setCart((prev) => [...prev, { ...item, quantity: 1 }]);
     };
 
@@ -87,7 +81,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
             updateQuantity,
             totalCartItems,
             discountedTotalPrice,
-            orignalTotal,
+            originalTotal,
             savedAmount,
             DeliveryCharge,
         }}>
