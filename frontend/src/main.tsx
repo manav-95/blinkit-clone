@@ -5,10 +5,10 @@ import App from './App.tsx'
 import AppContextProvider from './contexts/AppContextProvider.tsx'
 
 createRoot(document.getElementById('root')!).render(
-  <AppContextProvider>
-    <BrowserRouter>
+  <BrowserRouter>
+    <AppContextProvider>
       <App />
-    </BrowserRouter>
-  </AppContextProvider>
+    </AppContextProvider>
+  </BrowserRouter>
 
 )

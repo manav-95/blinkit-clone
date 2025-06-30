@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { FaCaretDown } from "react-icons/fa";
 import { FaCartShopping, FaIndianRupeeSign, FaX } from "react-icons/fa6";
@@ -12,6 +12,8 @@ import { useCart } from "../contexts/CartContext";
 
 import { useAuth } from "../contexts/AuthContext";
 
+import { useSearch } from "../contexts/SearchContext";
+
 const Navbar = () => {
 
   const { setOpenLocationBox, estimatedTime } = useLocationContext();
@@ -23,12 +25,10 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { input, setInput, showIcon } = useSearch();
+
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [slide, setSlide] = useState<boolean>(true);
-
-   const [input, setInput] = useState<string>('');
-  const [showIcon, setShowIcon] = useState(false);
-  const [query, setQuery] = useSearchParams();
 
   const texts = [`Search "butter"`, `Search "Milk"`, `Search "chips"`];
 
@@ -44,21 +44,11 @@ const Navbar = () => {
     return () => clearInterval(interval);
   })
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInput(e.target.value)
-      // console.log("InputtedText: ", input);
-    }
-  
-    useEffect(() => {
-      if (input.length >= 1) {
-        setShowIcon(true)
-        setQuery({ q: input })
-      } else {
-        setShowIcon(false)
-        setQuery();
-      }
-    }, [input, setQuery])
-  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value)
+    // console.log("InputtedText: ", input);
+  }
+
 
   useEffect(() => {
     if (location.pathname === '/s' || location.pathname.startsWith('/s/')) {
@@ -140,9 +130,9 @@ const Navbar = () => {
       {/* Cart and User */}
       <div className={`${displaySearch ? 'lg:min-w-[9.5rem]' : 'lg:min-w-[16.5rem] xl:min-w-80'} flex items-center`}>
         <button
-         onClick={() => setLoginBox(true)}
+          onClick={() => setLoginBox(true)}
           className={`${displaySearch ? 'hidden' : 'visible'} lg:px-10 xl:px-14 text-lg h-full text-darkGreen hover:bg-gray-50`}
-          >
+        >
           Login
         </button>
         <div className="px-0">
