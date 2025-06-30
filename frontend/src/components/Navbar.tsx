@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 
 import { FaCaretDown } from "react-icons/fa";
-import { FaCartShopping, FaIndianRupeeSign } from "react-icons/fa6";
+import { FaCartShopping, FaIndianRupeeSign, FaX } from "react-icons/fa6";
 import { LuSearch } from "react-icons/lu";
 
-import { useLocation } from "../contexts/LocationContext";
+import { useLocation as useLocationContext } from "../contexts/LocationContext";
 import { formatDeliveryTime } from '../utils/FormatDeliveryTime'
 
 import { useCart } from "../contexts/CartContext";
@@ -14,16 +14,21 @@ import { useAuth } from "../contexts/AuthContext";
 
 const Navbar = () => {
 
-  const { setOpenLocationBox, estimatedTime } = useLocation();
+  const { setOpenLocationBox, estimatedTime } = useLocationContext();
   const { totalCartItems, discountedTotalPrice, setCartOpen } = useCart();
   const { setLoginBox } = useAuth();
 
-
+  const [displaySearch, setDisplaySearch] = useState(false)
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [slide, setSlide] = useState<boolean>(true);
+
+   const [input, setInput] = useState<string>('');
+  const [showIcon, setShowIcon] = useState(false);
+  const [query, setQuery] = useSearchParams();
 
   const texts = [`Search "butter"`, `Search "Milk"`, `Search "chips"`];
 
@@ -39,6 +44,29 @@ const Navbar = () => {
     return () => clearInterval(interval);
   })
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInput(e.target.value)
+      // console.log("InputtedText: ", input);
+    }
+  
+    useEffect(() => {
+      if (input.length >= 1) {
+        setShowIcon(true)
+        setQuery({ q: input })
+      } else {
+        setShowIcon(false)
+        setQuery();
+      }
+    }, [input, setQuery])
+  
+
+  useEffect(() => {
+    if (location.pathname === '/s' || location.pathname.startsWith('/s/')) {
+      setDisplaySearch(true)
+    } else {
+      setDisplaySearch(false)
+    }
+  }, [location])
 
 
   return (
@@ -54,7 +82,7 @@ const Navbar = () => {
         </button>
         <button
           onClick={() => { setOpenLocationBox(true); console.log("location box is opened") }}
-          className="flex flex-col justify-center items-center lg:px-6 xl:px-10 hover:bg-gray-50 lg:min-w-[20rem] xl:min-w-[22rem]"
+          className={`${displaySearch ? 'hidden' : 'flex'} flex-col justify-center items-center lg:px-6 xl:px-10 hover:bg-gray-50 lg:min-w-[20rem] xl:min-w-[22rem]`}
         >
           <span className="font-gilroy text-xl mb-0.5">{estimatedTime ? `Delivery in ${formatDeliveryTime(parseInt(estimatedTime))}` : `Delivery in 8 mins`}</span>
           <div
@@ -67,22 +95,54 @@ const Navbar = () => {
         </button>
       </div>
       {/* Search Box */}
-      <div className="flex items-center w-full">
-        <button
-          onClick={() => navigate('/s/')}
-          className="flex justify-start items-center space-x-4 cursor-text px-2.5 border bg-[#f8f8f8] w-full min-h-11 rounded-xl">
-          <LuSearch className="flex-shrink-0 h-5 w-5" />
-          <div className="relative min-h-11 overflow-hidden">
-            <div
-              className={`text-[#999999] min-h-11 font-sans text-nowrap transition-all duration-300 ease-in-out ${slide ? 'translate-y-2 opacity-100' : '-translate-y-5 opacity-0'}`}>
-              {texts[currentIndex]}
+      {displaySearch
+        ? (
+          <>
+            <div className="flex items-center w-full px-8">
+              <div
+                style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.1)' }}
+                className="relative flex justify-between items-center border border-gray-300 bg-white w-full min-h-11 rounded-lg">
+                <LuSearch className="flex-shrink-0 h-5 w-5 mx-3.5" />
+                <input
+                  type="text"
+                  value={input}
+                  autoFocus={true}
+                  onChange={handleChange}
+                  placeholder="Search for aata dal and more"
+                  className={`caret-black text-black text-[17px] rounded-lg outline-none min-h-11 w-full font-sans text-nowrap`}
+                />
+                {
+                  showIcon &&
+                  <button onClick={() => setInput('')} className="absolute right-4">
+                    <FaX className="h-3.5 w-3.5 flex-shrink-0" />
+                  </button>
+                }
+              </div>
             </div>
-          </div>
-        </button>
-      </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center w-full">
+              <button
+                onClick={() => navigate('/s/')}
+                className="flex justify-start items-center space-x-4 cursor-text px-2.5 border bg-[#f8f8f8] w-full min-h-11 rounded-xl">
+                <LuSearch className="flex-shrink-0 h-5 w-5" />
+                <div className="relative min-h-11 overflow-hidden">
+                  <div
+                    className={`text-[#999999] min-h-11 font-sans text-nowrap transition-all duration-300 ease-in-out ${slide ? 'translate-y-2 opacity-100' : '-translate-y-5 opacity-0'}`}>
+                    {texts[currentIndex]}
+                  </div>
+                </div>
+              </button>
+            </div>
+          </>
+        )}
       {/* Cart and User */}
-      <div className="flex items-center lg:min-w-[16.5rem] xl:min-w-80">
-        <button onClick={() => setLoginBox(true)} className="lg:px-10 xl:px-14 text-lg h-full text-darkGreen hover:bg-gray-50">
+      <div className={`${displaySearch ? 'lg:min-w-[9.5rem]' : 'lg:min-w-[16.5rem] xl:min-w-80'} flex items-center`}>
+        <button
+         onClick={() => setLoginBox(true)}
+          className={`${displaySearch ? 'hidden' : 'visible'} lg:px-10 xl:px-14 text-lg h-full text-darkGreen hover:bg-gray-50`}
+          >
           Login
         </button>
         <div className="px-0">

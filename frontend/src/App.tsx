@@ -1,8 +1,7 @@
-import { Routes, Route, useLocation } from "react-router-dom"
+import { Routes, Route } from "react-router-dom"
 import Home from "./pages/Home"
 import Search from "./pages/Search"
 import Navbar from "./components/Navbar"
-import { useEffect, useState } from "react"
 import './App.css'
 
 import { useLocation as useLocationHook } from "./contexts/LocationContext"
@@ -24,29 +23,14 @@ function App() {
   const { cartOpen } = useCart();
   const { loginBox } = useAuth();
 
-  const [displayNav, setDisplayNav] = useState(true);
-
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.pathname === '/s' || location.pathname.startsWith('/s/')) {
-      setDisplayNav(false)
-    } else {
-      setDisplayNav(true)
-    }
-  }, [location])
-
-
+  
   return (
     <>
       <div className="relative h-screen w-full">
-        {displayNav
-          ?
-          <div className="min-h-[5.3rem] mb-0">
-            <Navbar />
-          </div>
-          : <></>
-        }
+        <div className="min-h-[5.3rem] mb-0">
+          <Navbar />
+        </div>
+
         {openLocationBox && (
           <>
             <div className="fixed top-0 h-screen w-full bg-black/50 z-40">

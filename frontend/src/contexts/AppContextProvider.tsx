@@ -2,6 +2,7 @@ import React from 'react'
 import { LocationProvider } from './LocationContext'
 import { CartProvider } from './CartContext'
 import { AuthProvider } from './AuthContext'
+import { ProductProvider } from './ProductContext'
 
 const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     return (
@@ -9,7 +10,9 @@ const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
             <AuthProvider>
                 <LocationProvider>
                     <CartProvider>
-                        {children}
+                        <ProductProvider>
+                            {children}
+                        </ProductProvider>
                     </CartProvider>
                 </LocationProvider>
             </AuthProvider>
