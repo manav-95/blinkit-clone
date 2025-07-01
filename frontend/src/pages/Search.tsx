@@ -15,8 +15,33 @@ const Search = () => {
   const [filteredProducts, setFilteredProducts] = useState<ProductType[]>([]);
   const [suggestionClicked, setSuggestionClicked] = useState(false);
 
+  const [relatedProducts, setRelatedProducts] = useState<ProductType[]>([]);
+
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
+  const [isStorageLoaded, setIsStorageLoaded] = useState(false);
+
+
   // ✅ Ref to detect manual typing
   const isManualTyping = useRef(true);
+
+  const getRelatedProducts = (selectedProduct) => {
+    return products.filter((product) => {
+      const isSameProduct = product.id === selectedProduct.id;
+
+      const isSameCategory = product.category === selectedProduct.category;
+      const isSameSubCategory = product.subCategory === selectedProduct.subCategory;
+
+      const hasCommonWord = product.productName
+        .toLowerCase()
+        .split(' ')
+        .some((word) =>
+          selectedProduct.productName.toLowerCase().includes(word)
+        );
+
+      return !isSameProduct && (isSameSubCategory || isSameCategory || hasCommonWord);
+    });
+  };
+
 
   // Filter products on input
   useEffect(() => {
@@ -32,6 +57,15 @@ const Search = () => {
         product.productName.toLowerCase().includes(term)
       );
       setFilteredProducts(matched);
+
+      if (matched.length > 0) {
+        const related = getRelatedProducts(matched[0])
+        setRelatedProducts(related)
+      } else {
+        setRelatedProducts([])
+      }
+
+
     }, 300);
 
     return () => clearTimeout(timeout);
@@ -43,6 +77,29 @@ const Search = () => {
       setSuggestionClicked(false);
     }
   }, [input]);
+
+
+  useEffect(() => {
+    if (isStorageLoaded) {
+      localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
+    }
+  }, [recentSearches, isStorageLoaded]);
+
+
+  useEffect(() => {
+    const stored = localStorage.getItem("recentSearches");
+    if (stored) {
+      setRecentSearches(JSON.parse(stored));
+    }
+    setIsStorageLoaded(true); // ✅ indicate it's safe to save now
+  }, []);
+
+  useEffect(() => {
+    setInput('')
+    setQuery('')
+  },[window.location])
+
+
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-4">
@@ -58,6 +115,11 @@ const Search = () => {
                 isManualTyping.current = false; // 👈 prevent useEffect from resetting suggestionClicked
                 setInput(value);
                 setQuery(value);
+                setRecentSearches((prev) => {
+                  const updated = [value, ...prev.filter((item) => item !== value)];
+                  return updated.slice(0, 10); // keep only 10 latest
+                });
+
                 setSuggestionClicked(true);
                 setTimeout(() => {
                   isManualTyping.current = true; // reset for future typing
@@ -114,20 +176,79 @@ const Search = () => {
               );
             })}
           </div>
+
+          <h1 className="my-2 font-poppins font-semibold">
+            Search Related Products
+          </h1>
+          <div className="grid grid-cols-6 gap-4">
+            {relatedProducts.map((product, idx) => {
+              const cartItem: CartItemType =
+                cart.find((item) => item.id === product.id) ?? {
+                  id: product.id,
+                  productName: product.productName ?? "",
+                  productPrice: product.discountPrice ?? 0,
+                  productMrp: product?.mrp,
+                  productImage: product.productImage ?? "",
+                  unit: product.unit ?? "",
+                  quantity: 0,
+                };
+
+              return (
+                <ProductCard
+                  key={idx}
+                  id={product.id}
+                  name={product.productName}
+                  category={product.category}
+                  subCategory={product.subCategory}
+                  discountPrice={product.discountPrice}
+                  image={product.productImage}
+                  mrp={product.mrp}
+                  unit={product.unit}
+                  quantity={product.quantity}
+                  cartItem={cartItem}
+                />
+              );
+            })}
+          </div>
         </>
       ) : (
         <>
-          <div className="flex justify-between items-center">
-            <h1 className="font-gilroy text-lg text-gray-800">
-              Recent Searches
-            </h1>
-            <button className="text-[#318616] font-medium">clear</button>
-          </div>
-          <div className="flex space-x-4 text-nowrap">
-            <button className="border shadow-sm px-4 py-1 rounded-lg text-sm font-[450] text-gray-600 my-4">
-              wwe 2k24
-            </button>
-          </div>
+          {recentSearches.length > 0
+            ? (
+              <>
+                <div className="flex justify-between items-center">
+                  <h1 className="font-gilroy text-lg text-gray-800">
+                    Recent Searches
+                  </h1>
+                  <button
+                    onClick={() => {
+                      setRecentSearches([]);
+                      localStorage.removeItem('recentSearches');
+                    }}
+                    className="text-[#318616] font-medium"
+                  >
+                    clear
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {recentSearches.map((term, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setInput(term);
+                        setQuery(term);
+                      }}
+                      className="border shadow-sm px-4 py-1 rounded-lg text-sm font-[450] text-gray-600"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+              </>
+            )}
         </>
       )}
     </div>
