@@ -77,7 +77,7 @@ const Navbar = () => {
           <span className="font-gilroy text-xl mb-0.5">{estimatedTime ? `Delivery in ${formatDeliveryTime(parseInt(estimatedTime))}` : `Delivery in 8 mins`}</span>
           <div
             className="flex items-center">
-            <span className="line-clamp-1 text-sm font-sans tracking-wide">
+            <span className="line-clamp-1 text-xs font-poppins tracking-wide">
               {localStorage.getItem("selectedLocation") || "Select Location"}
             </span>
             <FaCaretDown className="flex-shrink-0 ml-1 h-5 w-5" />
