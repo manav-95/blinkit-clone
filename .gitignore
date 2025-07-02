@@ -1,0 +1,37 @@
+# Root-level node_modules if any (optional)
+node_modules/
+.env
+*.env.local
+*.log
+dist/
+build/
+coverage/
+
+# Backend (Express)
+backend/node_modules/
+backend/.env
+backend/.DS_Store
+backend/logs/
+backend/coverage/
+backend/npm-debug.log*
+
+# Frontend (React)
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.DS_Store
+frontend/coverage/
+frontend/npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/project files
+.vscode/
+.idea/
+*.swp
+
+# Optional
+uploads/
+dump/
