@@ -8,32 +8,38 @@ import CategoryProducts from "./pages/CategoryProducts"
 import ProductsByCategory from "./pages/ProductsByCategory"
 import UserLayout from "./layouts/UserLayout"
 import AdminLayout from "./layouts/AdminLayout"
-import AdminLogin from "./pages/AdminLogin"
-import AdminDashboard from "./pages/AdminDashboard"
+import AdminLogin from "./pages/admin/AdminLogin"
+import AdminDashboard from "./pages/admin/AdminDashboard"
+import Products from "./pages/admin/Products"
+import Orders from "./pages/admin/Orders"
 
 function App() {
 
 
   return (
-    <>  
-        <Routes>
+    <>
+      <Routes>
 
-          {/* User Routes */}
-          <Route path="/" element={<UserLayout />}>
-            <Route index path="/" element={<Home />} />
-            <Route path="s" element={<Search />} />
-            <Route path="pn/:productName/pid/:productId" element={<ProductDetails />} />
-            <Route path="cn/:categoryName" element={<CategoryProducts />} />
-            <Route path="cn/:categoryName/:subCategoryName" element={<ProductsByCategory />} />
-          </Route>
+        {/* User Routes */}
+        <Route path="/" element={<UserLayout />}>
+          <Route index path="/" element={<Home />} />
+          <Route path="s" element={<Search />} />
+          <Route path="pn/:productName/pid/:productId" element={<ProductDetails />} />
+          <Route path="cn/:categoryName" element={<CategoryProducts />} />
+          <Route path="cn/:categoryName/:subCategoryName" element={<ProductsByCategory />} />
+        </Route>
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index path="login" element={<AdminLogin />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-          </Route>
 
-        </Routes>
+        <Route path="/admin/login" element={<AdminLogin />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="products" element={<Products />} />
+          <Route path="orders" element={<Orders />} />
+        </Route>
+
+      </Routes>
     </>
   )
 }

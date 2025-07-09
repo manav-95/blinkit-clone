@@ -3,6 +3,9 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose';
 
+import cloudinaryRoute from './routes/cloudinaryRoute.js'
+import productRoute from './routes/productRoute.js'
+
 dotenv.config();
 
 const app = express();
@@ -36,6 +39,9 @@ app.post('/api/admin/login', (req, res) => {
     }
 
 });
+
+app.use('/api/cloudinary', cloudinaryRoute);
+app.use('/api/products', productRoute);
 
 const PORT = process.env.PORT || 5000;
 

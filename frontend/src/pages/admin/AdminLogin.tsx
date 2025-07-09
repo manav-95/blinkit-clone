@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -25,10 +25,13 @@ const AdminLogin = () => {
                 console.log("Login Success:", res.data);
             }
 
-        } catch (error: any) {
-            if (error?.response?.status === 401) {
-                setError("Invalid Credentials")
+        } catch (err) {
+            const error = err as AxiosError;
+
+            if (error.response?.status === 401) {
+                setError("Invalid Credentials");
             }
+
             console.error("Login error:", error.response?.data || error.message);
         }
     };
@@ -37,7 +40,7 @@ const AdminLogin = () => {
         if (formData) {
             setError('')
         }
-    },[formData])
+    }, [formData])
 
     return (
         <div className="h-screen w-full relative">
