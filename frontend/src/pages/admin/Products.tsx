@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { LuPlus, LuUpload, LuX } from 'react-icons/lu'
-import Modal from '../../components/Modal'
 import axios, { AxiosError } from 'axios'
+import Modal from '../../components/Modal'
+import { LuEye, LuPlus, LuTrash2, LuUpload, LuX } from 'react-icons/lu'
+import { LucideEdit } from 'lucide-react';
 
 interface ProductType {
   name: string;
@@ -32,6 +33,7 @@ const Products = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [images, setImages] = useState<ImagePreview[]>([]);
+  const [products, setProducts] = useState<ProductType[] | []>([])
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const multipleFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -96,9 +98,10 @@ const Products = () => {
     setImages((prev) => [...prev, ...newImages]);
   };
 
-  useEffect(() => {
-    console.log("Gallery Updated:", images);
-  }, [images]);
+  // useEffect(() => {
+  //   console.log("Gallery Updated:", images);
+  // }, [images]);
+
 
   const handleRemove = (index: number) => {
     setImages((prev) => {
@@ -117,9 +120,7 @@ const Products = () => {
   };
 
 
-
   const uploadToCloudinary = async (file: File) => {
-
     // Get Signature from backend
     const sigRes = await axios.get('http://localhost:5000/api/cloudinary/signature');
 
@@ -155,20 +156,38 @@ const Products = () => {
     setIsLoading(true)
 
     try {
-
       if (!mainImage?.file) {
-        console.error("Main image file is missing.");
+        alert("Main image file is missing.");
+        console.log("Main image file is missing.");
         return;
       }
 
+      // step 1: Check if product name already exists in DB
+      const validateRes = await axios.post("http://localhost:5000/api/products/validate-name", {
+        prodName: formData.name,
+      });
+
+      if (validateRes.status !== 200) {
+        alert("Product name already exists");
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 2: Now upload images since validation passed
       const mainImageUrl = await uploadToCloudinary(mainImage.file);
 
       const galleryUploads = await Promise.all(
         images.map((img) => uploadToCloudinary(img?.file))
       )
 
+      // Step 3: Prepare product data
       const productId = Math.floor(100000 + Math.random() * 900000);
-      const discount = (((formData.mrp - formData.price) / formData.mrp) * 100).toFixed(0);
+
+      const discount =
+        formData.mrp && formData.price
+          ? Math.round(((formData.mrp - formData.price) / formData.mrp) * 100)
+          : 0;
+
       const formDataToSend = {
         prodId: productId,
         prodName: formData.name,
@@ -187,12 +206,16 @@ const Products = () => {
         description: formData.description,
       }
 
+      // Step 4: Add to DB
       const res = await axios.post('http://localhost:5000/api/products/add', formDataToSend)
+
+      if (res.status === 201) {
+        alert("Product Added Successfully")
+      }
 
       console.log("Product Saved: ", res.data)
 
-      setIsLoading(false)
-
+      // Reset state
       setFormData({
         name: '',
         brand: '',
@@ -213,19 +236,31 @@ const Products = () => {
 
     } catch (error) {
       const axiosError = error as AxiosError;
-
-      const status = axiosError.response?.status;
       const message = (axiosError.response?.data as { message: string })?.message || "Something went wrong";
-
-      if (status === 400) {
-        alert(message);
-      }
-
-      console.error("Axios error:", message);
+      alert(message);
+      console.error("Error:", message);
+    } finally {
       setIsLoading(false);
     }
+  };
 
-  }
+
+  useEffect(() => {
+    const getAllProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/products');
+        if (response) {
+          console.log(response.data)
+          setProducts(response.data)
+        }
+      } catch (error) {
+        console.error("Error Fetching Products: ", error)
+      }
+    }
+
+    getAllProducts();
+  }, [])
+
 
   return (
     <>
@@ -467,9 +502,7 @@ const Products = () => {
                     ))}
                   </div>
                 }
-
               </div>
-
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
@@ -514,6 +547,119 @@ const Products = () => {
           </form>
         </Modal>
       )}
+
+
+      <div className="overflow-x-auto px-6 py-4">
+        <table className="w-full font-poppins">
+          <thead className="bg-gradient-to-r from-green-600 to-green-800">
+            <tr>
+              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Product
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Category
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Price
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Discount
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Stock
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {products
+              // .filter(
+              //   (product) =>
+              //     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              //     product.category.toLowerCase().includes(searchTerm.toLowerCase()),
+              // )
+              .map((product) => (
+                <tr key={product?.prodId} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <img
+                        src={product?.mainImageUrl || "/placeholder.svg"}
+                        alt={product.name}
+                        className="w-12 h-12 rounded-lg object-cover mr-4"
+                      />
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 capitalize">{product.name}</div>
+                        <div className="text-xs text-gray-600 font-medium">{product?.prodId}</div>
+                        <div className="text-xs text-gray-400">{product.unit}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm text-gray-900">{product.category}</div>
+                      <div className="text-xs text-gray-500">{product.subCategory}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">₹{product.price}</div>
+                      <div className="text-xs text-gray-500 line-through">MRP: ₹{product.mrp}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{product?.discount}%</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div
+                        className={`text-sm font-medium ${product.stockQuantity < product.minStock ? "text-red-600" : "text-gray-900"
+                          }`}
+                      >
+                        {product.stockQuantity} units
+                      </div>
+                      <div className="text-xs text-gray-500">Min: {product.minStock}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingItem(product)
+                          setModalType("product")
+                          setShowModal(true)
+                        }}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <LuEye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingItem(product)
+                          setModalType("product")
+                          setShowModal(true)
+                        }}
+                        className="text-green-600 hover:text-green-900"
+                      >
+                        <LucideEdit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setProducts(products.filter((p) => p.id !== product.id))}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <LuTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+
     </>
   )
 }

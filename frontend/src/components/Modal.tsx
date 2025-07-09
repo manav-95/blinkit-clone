@@ -14,7 +14,7 @@ const Modal = ({ title, children, onClose, size = "md" }: ModalProps) => (
             className={`relative bg-white rounded-xl shadow-xl w-full ${size === "lg" ? "max-w-4xl" : size === "sm" ? "max-w-md" : "max-w-2xl"
                 } max-h-[90vh] overflow-y-auto`}
         >
-            <div className="sticky bg-white top-0 shadow flex items-center justify-between p-6 border-b">
+            <div className="sticky bg-white top-0 z-10 shadow flex items-center justify-between p-6 border-b">
                 <h2 className="text-xl font-bold text-gray-900">{title}</h2>
                 <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                     <LuX className="w-6 h-6" />

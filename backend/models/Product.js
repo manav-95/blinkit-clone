@@ -59,12 +59,7 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    role: {
-        type: String,
-        enum: ['user', 'admin'],
-        required: true
-    }
-});
+}, { timestamps: true });
 
 const Product = mongoose.model('Product', productSchema);
 
