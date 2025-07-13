@@ -3,6 +3,9 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose';
 
+import fileUpload from 'express-fileupload';
+import formidable from 'express-formidable';
+
 import cloudinaryRoute from './routes/cloudinaryRoute.js'
 import productRoute from './routes/productRoute.js'
 
@@ -12,6 +15,7 @@ const app = express();
 
 app.use(express.json())
 app.use(cors())
+
 
 const connectDB = async () => {
     try {

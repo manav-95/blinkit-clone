@@ -49,12 +49,15 @@ const productSchema = new mongoose.Schema({
         required: true
     },
     mainImageUrl: {
-        type: String,
-        required: true
+        url: { type: String, required: true },
+        public_id: { type: String, required: true }
     },
-    galleryUrls: [{
-        type: String,
-    }],
+    galleryUrls: [
+        {
+            url: { type: String, required: true },
+            public_id: { type: String, required: true }
+        }
+    ],
     description: {
         type: String,
         required: true

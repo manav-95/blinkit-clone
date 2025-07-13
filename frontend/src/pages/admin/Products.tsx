@@ -5,52 +5,86 @@ import { LuEye, LuPlus, LuTrash2, LuUpload, LuX } from 'react-icons/lu'
 import { LucideEdit } from 'lucide-react';
 
 interface ProductType {
+  prodId?: string;
   name: string;
   brand: string;
   category: string;
   subCategory: string;
-  price: number;
-  mrp: number;
+  price: string;
+  mrp: string;
+  discount?: string;
   unit: string;
   type: string;
-  stockQuantity: number;
-  minStock: number;
+  stockQuantity: string;
+  minStock: string;
   description: string;
+  mainImageUrl?: {
+    url: string;
+    public_id: string;
+  };
+  galleryUrls?: {
+    url: string;
+    public_id: string;
+  }[];
 }
 
-type ImagePreview = {
-  file: File;
+type MainImagePreview = {
+  file?: File;
   preview: string;
+  public_id?: string;
+};
+
+type GalleryPreview = {
+  file?: File;
+  preview: string;
+  public_id?: string;
 };
 
 
 const Products = () => {
 
   const [modalType, setModalType] = useState<string>("")
-  const [mainImage, setMainImage] = useState<ImagePreview | null>(null)
+  const [mainImage, setMainImage] = useState<MainImagePreview | null>(null)
 
   const [showModal, setShowModal] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const [images, setImages] = useState<ImagePreview[]>([]);
-  const [products, setProducts] = useState<ProductType[] | []>([])
+  const [images, setImages] = useState<GalleryPreview[] | []>([]);
+  const [products, setProducts] = useState<ProductType[] | []>([]);
+
+  const [removedGalleryImages, setRemovedGalleryImages] = useState<string[]>([]);
+
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const multipleFileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [editingItem, setEditingItem] = useState(null)
+  const [editingItem, setEditingItem] = useState<ProductType | null>(null)
 
   const [formData, setFormData] = useState<ProductType>({
     name: '',
     brand: '',
     category: '',
     subCategory: '',
-    price: 0,
-    mrp: 0,
+    price: '',
+    mrp: '',
     unit: '',
     type: '',
-    stockQuantity: 0,
-    minStock: 0,
+    stockQuantity: '',
+    minStock: '',
+    description: '',
+  })
+
+  const [error, setError] = useState<ProductType>({
+    name: '',
+    brand: '',
+    category: '',
+    subCategory: '',
+    price: '',
+    mrp: '',
+    unit: '',
+    type: '',
+    stockQuantity: '',
+    minStock: '',
     description: '',
   })
 
@@ -98,17 +132,27 @@ const Products = () => {
     setImages((prev) => [...prev, ...newImages]);
   };
 
-  // useEffect(() => {
-  //   console.log("Gallery Updated:", images);
-  // }, [images]);
 
 
   const handleRemove = (index: number) => {
-    setImages((prev) => {
-      URL.revokeObjectURL(prev[index].preview);
-      return prev.filter((_, i) => i !== index);
+    setImages((prevImages) => {
+      const removedImage = prevImages[index] as GalleryPreview & { public_id?: string };
+
+      // Revoke object URL only if it's a new image (not from DB)
+      if (removedImage.preview && !removedImage.public_id) {
+        URL.revokeObjectURL(removedImage.preview);
+      }
+
+      // Only add to removedGalleryImages if public_id is a string
+      if (typeof removedImage.public_id === "string") {
+        setRemovedGalleryImages((prev) => [...prev, removedImage.public_id as string]);
+      }
+
+      // Return the remaining images
+      return prevImages.filter((_, i) => i !== index);
     });
   };
+
 
 
   const triggerMainImageSelect = () => {
@@ -120,35 +164,104 @@ const Products = () => {
   };
 
 
-  const uploadToCloudinary = async (file: File) => {
-    // Get Signature from backend
-    const sigRes = await axios.get('http://localhost:5000/api/cloudinary/signature');
-
-    const { timestamp, signature, apiKey, cloudName, folder } = sigRes.data;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('api_key', apiKey);
-    formData.append('timestamp', timestamp);
-    formData.append('signature', signature);
-    formData.append('folder', folder);
-
-    const cloudRes = await axios.post(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      formData
-    );
-
-    return cloudRes.data.secure_url;
-  }
-
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    setError((prev) => ({
+      ...prev,
+      [e.target.name]: "",
+    }));
   };
+
+
+  const validateForm = () => {
+    let isValid = true;
+
+    const newError = {
+      name: '',
+      brand: '',
+      category: '',
+      subCategory: '',
+      price: '',
+      mrp: '',
+      unit: '',
+      type: '',
+      stockQuantity: '',
+      minStock: '',
+      description: '',
+    }
+
+    if (!formData.name) {
+      newError.name = 'Product Name is required';
+      isValid = false;
+    }
+
+    if (!formData.brand.trim()) {
+      newError.brand = 'Product Brand is required';
+      isValid = false;
+    }
+
+    if (!formData.category.trim()) {
+      newError.category = 'Product Category is required';
+      isValid = false;
+    }
+
+    if (!formData.subCategory.trim()) {
+      newError.subCategory = 'Product Sub Category is required';
+      isValid = false;
+    }
+
+    if (!formData.price.trim()) {
+      newError.price = 'Product Price is required';
+      isValid = false;
+    }
+
+    if (!formData.mrp.trim()) {
+      newError.mrp = 'Product MRP is required';
+      isValid = false;
+    }
+
+    if (Number(formData.price.trim()) > Number(formData.mrp.trim())) {
+      newError.price = 'Price should be less than MRP'
+      isValid = false;
+    }
+
+    if (!formData.unit.trim()) {
+      newError.unit = 'Product Unit is required';
+      isValid = false;
+    }
+
+    if (!formData.type.trim()) {
+      newError.type = 'Product Type is required';
+      isValid = false;
+    }
+
+    if (!formData.stockQuantity.trim()) {
+      newError.stockQuantity = 'Product Stock Quantity is required';
+      isValid = false;
+    }
+
+    if (!formData.minStock.trim()) {
+      newError.minStock = 'Product Minimum Stock is required';
+      isValid = false;
+    }
+
+    if (!formData.description.trim()) {
+      newError.description = 'Product Description is required';
+      isValid = false;
+    }
+
+    if (!mainImage?.file) {
+      alert("Main image file is missing.");
+      isValid = false;
+    }
+
+    setError(newError);
+    return isValid;
+  }
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,107 +269,225 @@ const Products = () => {
     setIsLoading(true)
 
     try {
-      if (!mainImage?.file) {
-        alert("Main image file is missing.");
-        console.log("Main image file is missing.");
-        return;
+      if (validateForm()) {
+
+        const formDataToSend = new FormData();
+
+        formDataToSend.append("name", formData.name);
+        formDataToSend.append("brand", formData.brand);
+        formDataToSend.append("category", formData.category);
+        formDataToSend.append("subCategory", formData.subCategory);
+        formDataToSend.append("unit", formData.unit);
+        formDataToSend.append("type", formData.type);
+        formDataToSend.append("price", formData.price);
+        formDataToSend.append("mrp", formData.mrp);
+        formDataToSend.append("stockQuantity", formData.stockQuantity);
+        formDataToSend.append("minStock", formData.minStock);
+        formDataToSend.append("description", formData.description);
+
+        if (mainImage?.file) {
+          formDataToSend.append("mainImage", mainImage.file)
+        }
+
+        if (images.length > 0) {
+          images.forEach((item) => {
+            formDataToSend.append("galleryImages", item.file);
+          });
+        }
+
+        const res = await axios.post(`${baseUrl}/products/add`, formDataToSend);
+
+        if (res.status === 201) {
+          alert("Product Added Successfully")
+        }
+
+        console.log("Product Saved: ", res.data)
+
+        // Reset state
+        setFormData({
+          name: '',
+          brand: '',
+          category: '',
+          subCategory: '',
+          price: '',
+          mrp: '',
+          unit: '',
+          type: '',
+          stockQuantity: '',
+          minStock: '',
+          description: '',
+        })
+
+        setMainImage(null)
+        setImages([])
+      } else {
+        console.log("Form Validation Failed")
       }
-
-      // step 1: Check if product name already exists in DB
-      const validateRes = await axios.post("http://localhost:5000/api/products/validate-name", {
-        prodName: formData.name,
-      });
-
-      if (validateRes.status !== 200) {
-        alert("Product name already exists");
-        setIsLoading(false);
-        return;
-      }
-
-      // Step 2: Now upload images since validation passed
-      const mainImageUrl = await uploadToCloudinary(mainImage.file);
-
-      const galleryUploads = await Promise.all(
-        images.map((img) => uploadToCloudinary(img?.file))
-      )
-
-      // Step 3: Prepare product data
-      const productId = Math.floor(100000 + Math.random() * 900000);
-
-      const discount =
-        formData.mrp && formData.price
-          ? Math.round(((formData.mrp - formData.price) / formData.mrp) * 100)
-          : 0;
-
-      const formDataToSend = {
-        prodId: productId,
-        prodName: formData.name,
-        prodBrand: formData.brand,
-        category: formData.category,
-        subCategory: formData.subCategory,
-        unit: formData.unit,
-        type: formData.type,
-        price: formData.price,
-        mrp: formData.mrp,
-        discount: discount,
-        stockQuantity: formData.stockQuantity,
-        minStock: formData.minStock,
-        mainImageUrl: mainImageUrl,
-        galleryUrls: galleryUploads,
-        description: formData.description,
-      }
-
-      // Step 4: Add to DB
-      const res = await axios.post('http://localhost:5000/api/products/add', formDataToSend)
-
-      if (res.status === 201) {
-        alert("Product Added Successfully")
-      }
-
-      console.log("Product Saved: ", res.data)
-
-      // Reset state
-      setFormData({
-        name: '',
-        brand: '',
-        category: '',
-        subCategory: '',
-        price: 0,
-        mrp: 0,
-        unit: '',
-        type: '',
-        stockQuantity: 0,
-        minStock: 0,
-        description: '',
-      })
-
-      setMainImage(null)
-      setImages([])
-
 
     } catch (error) {
       const axiosError = error as AxiosError;
       const message = (axiosError.response?.data as { message: string })?.message || "Something went wrong";
-      alert(message);
+      const status = axiosError.response?.status || 500;
+      alert(`Error ${status}: ${message}`);
       console.error("Error:", message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (editingItem) {
+      setFormData({
+        prodId: editingItem.prodId,
+        name: editingItem.name,
+        brand: editingItem.brand,
+        category: editingItem.category,
+        subCategory: editingItem.subCategory,
+        price: editingItem.price,
+        mrp: editingItem.mrp,
+        unit: editingItem.unit,
+        type: editingItem.type,
+        stockQuantity: editingItem.stockQuantity,
+        minStock: editingItem.minStock,
+        description: editingItem.description,
+      });
+
+      setMainImage(
+        editingItem.mainImageUrl?.url
+          ? {
+            preview: editingItem.mainImageUrl.url,
+            file: undefined,
+            public_id: editingItem.mainImageUrl.public_id,
+          }
+          : null
+      );
+
+      setImages(
+        (editingItem.galleryUrls || []).map((img) => ({
+          preview: img.url,
+          file: undefined,
+          public_id: img.public_id,
+        }))
+      );
+    } else {
+      // If no editing item, reset everything
+      setFormData({
+        name: '',
+        brand: '',
+        category: '',
+        subCategory: '',
+        price: '',
+        mrp: '',
+        unit: '',
+        type: '',
+        stockQuantity: '',
+        minStock: '',
+        description: '',
+      });
+
+      setMainImage(null);
+      setImages([]);
+    }
+  }, [editingItem]);
+
+
+
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (!editingItem?.prodId) {
+        alert("Product ID is missing. Cannot update.");
+        return;
+      }
+
+      if (!validateForm()) {
+        console.log("Form validation failed.");
+        return;
+      }
+
+      const formDataToSend = new FormData();
+
+      // Append all text fields
+      Object.entries(formData).forEach(([key, value]) => {
+        formDataToSend.append(key, value);
+      });
+
+      // Add prodId explicitly
+      formDataToSend.append("prodId", editingItem.prodId);
+
+      // If main image replaced
+      if (mainImage?.file) {
+        formDataToSend.append("mainImage", mainImage.file);
+        formDataToSend.append("oldMainImageId", editingItem.mainImageUrl?.public_id || "");
+      }
+
+      // Add only new gallery images (exclude existing)
+      images.forEach((img) => {
+        if (!("public_id" in img)) {
+          formDataToSend.append("galleryImages", img.file);
+        }
+      });
+
+      // Removed gallery images (for deletion from Cloudinary)
+      removedGalleryImages.forEach((public_id) => {
+        if (public_id) {
+          formDataToSend.append("removedGalleryImages[]", public_id);
+        }
+      });
+
+      // Send request
+      const res = await axios.put(`${baseUrl}/products/update`, formDataToSend);
+
+      if (res.status === 200) {
+        alert("✅ Product updated successfully");
+
+        // Reset form state
+        setFormData({
+          name: '',
+          brand: '',
+          category: '',
+          subCategory: '',
+          price: '',
+          mrp: '',
+          unit: '',
+          type: '',
+          stockQuantity: '',
+          minStock: '',
+          description: '',
+        });
+        setMainImage(null);
+        setImages([]);
+        setRemovedGalleryImages([]);
+        setShowModal(false);
+        setEditingItem(null);
+
+        // Refresh products
+        const refreshed = await axios.get(`${baseUrl}/products`);
+        setProducts(refreshed.data);
+      }
+    } catch (error) {
+      console.error("❌ Update failed", error);
+      alert("Update failed. Please check console.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
 
   useEffect(() => {
     const getAllProducts = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/products');
-        if (response) {
-          console.log(response.data)
-          setProducts(response.data)
+        const res = await axios.get(`${baseUrl}/products`)
+        if (res) {
+          setProducts(res.data)
         }
       } catch (error) {
-        console.error("Error Fetching Products: ", error)
+        console.error("Error Fetching products: ", error)
       }
-    }
+    };
 
     getAllProducts();
   }, [])
@@ -277,7 +508,7 @@ const Products = () => {
                 setEditingItem(null)
                 setShowModal(true)
               }}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="bg-gradient-to-r from-blue-500 to-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               <LuPlus className="w-4 h-4" />
               Add Product
@@ -289,7 +520,7 @@ const Products = () => {
 
       {showModal && modalType === "product" && (
         <Modal title={editingItem ? "Edit Product" : "Add New Product"} onClose={() => setShowModal(false)} size="lg">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
@@ -302,6 +533,7 @@ const Products = () => {
                   placeholder="Enter product name"
                   required
                 />
+                {error.name && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.name}</span>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Product Brand</label>
@@ -318,6 +550,8 @@ const Products = () => {
                   ))}
 
                 </select>
+                {error.brand && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.brand}</span>}
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
@@ -333,6 +567,8 @@ const Products = () => {
                     <option key={index} value={category.value} className='capitalize'>{category.name}</option>
                   ))}
                 </select>
+                {error.category && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.category}</span>}
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
@@ -350,6 +586,8 @@ const Products = () => {
                     ))}
 
                   </select>
+                  {error.subCategory && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.subCategory}</span>}
+
                 </div>
               </div>
               <div>
@@ -363,6 +601,7 @@ const Products = () => {
                   placeholder="Enter price"
                   required
                 />
+                {error.price && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.price}</span>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">MRP (₹)</label>
@@ -375,6 +614,8 @@ const Products = () => {
                   placeholder="Enter MRP"
                   required
                 />
+                {error.mrp && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.mrp}</span>}
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
@@ -387,6 +628,8 @@ const Products = () => {
                   placeholder="Enter Unit"
                   required
                 />
+                {error.unit && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.unit}</span>}
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
@@ -399,6 +642,8 @@ const Products = () => {
                   placeholder="Enter Type"
                   required
                 />
+                {error.type && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.type}</span>}
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Stock Quantity</label>
@@ -411,6 +656,8 @@ const Products = () => {
                   placeholder="Enter stock quantity"
                   required
                 />
+                {error.stockQuantity && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.stockQuantity}</span>}
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Stock</label>
@@ -423,6 +670,8 @@ const Products = () => {
                   placeholder="Enter minimum stock"
                   required
                 />
+                {error.minStock && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.minStock}</span>}
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
@@ -455,11 +704,19 @@ const Products = () => {
                 </button>
 
                 {mainImage?.preview && (
-                  <img
-                    src={mainImage.preview}
-                    alt={"Main product Image"}
-                    className='h-fit w-full rounded-md aspect-square object-contain border-2 my-3'
-                  />
+                  <div className='relative'>
+                    <img
+                      src={mainImage.preview}
+                      alt={"Main product Image"}
+                      className='h-fit w-full rounded-md aspect-square object-contain border-2 my-3'
+                    />
+                    <button
+                      className="absolute -top-2 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center"
+                      onClick={() => setMainImage(null)}
+                    >
+                      <LuX />
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -514,6 +771,8 @@ const Products = () => {
                 onChange={handleChange}
                 placeholder="Enter product description"
               ></textarea>
+              {error.description && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.description}</span>}
+
             </div>
 
             {isLoading ? (
@@ -527,12 +786,22 @@ const Products = () => {
             ) : (
               <>
                 <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    {editingItem ? "Update Product" : "Add Product"}
-                  </button>
+                  {editingItem ? (
+                    <button
+                      onClick={handleUpdateSubmit}
+                      className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      Update Product
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSubmit}
+                      className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      Add Product
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
@@ -553,6 +822,9 @@ const Products = () => {
         <table className="w-full font-poppins">
           <thead className="bg-gradient-to-r from-green-600 to-green-800">
             <tr>
+              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Id
+              </th>
               <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Product
               </th>
@@ -583,15 +855,20 @@ const Products = () => {
               .map((product) => (
                 <tr key={product?.prodId} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{product.prodId}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <img
-                        src={product?.mainImageUrl || "/placeholder.svg"}
+                        src={product?.mainImageUrl?.url || "/placeholder.svg"}
                         alt={product.name}
                         className="w-12 h-12 rounded-lg object-cover mr-4"
                       />
                       <div>
                         <div className="text-sm font-medium text-gray-900 capitalize">{product.name}</div>
-                        <div className="text-xs text-gray-600 font-medium">{product?.prodId}</div>
+                        <div className="text-xs text-gray-600 font-medium">{product?.brand}</div>
                         <div className="text-xs text-gray-400">{product.unit}</div>
                       </div>
                     </div>
@@ -628,7 +905,6 @@ const Products = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => {
-                          setEditingItem(product)
                           setModalType("product")
                           setShowModal(true)
                         }}
