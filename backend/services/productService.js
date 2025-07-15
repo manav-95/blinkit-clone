@@ -39,7 +39,7 @@ export const addProductService = async (productData) => {
             error.statusCode = 400;
             throw error;
         }
-        
+
         const uploadedMainImage = await uploadToCloudinary(mainImage.buffer);
 
         const uploadedGallery = await Promise.all(
@@ -77,35 +77,83 @@ export const addProductService = async (productData) => {
 };
 
 
-export const updateProductService = async (prodId, updatedData) => {
-    const product = await Product.findOne({ prodId });
+export const updateProductService = async (prodId, data) => {
+    if (!data) {
+        const error = new Error("No update data provided");
+        error.statusCode = 400;
+        throw error;
+    }
+    
+    const {
+        name, brand, category, subCategory, type,
+        unit, price, mrp, stockQuantity, minStock,
+        description, oldMainImageId, removedGalleryImages,
+    } = data;
 
+    const product = await Product.findOne({ prodId });
     if (!product) {
-        throw new Error("Product Not Found");
+        const error = new Error("Product not found");
+        error.statusCode = 404;
+        throw error;
     }
 
-    // Clear old Data
-    product.mainImageUrl = ''
-    product.galleryUrls = []
+    // Recalculate discount
+    const discount = mrp && price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
-    product.name = updatedData.prodName,
-        product.brand = updatedData.prodBrand,
-        product.category = updatedData.category,
-        product.subCategory = updatedData.subCategory,
-        product.price = updatedData.price,
-        product.mrp = updatedData.mrp,
-        product.discount = updatedData.discount,
-        product.unit = updatedData.unit,
-        product.type = updatedData.type,
-        product.stockQuantity = updatedData.stockQuantity,
-        product.minStock = updatedData.minStock,
-        product.mainImageUrl = updatedData.mainImageUrl,
-        product.galleryUrls = updatedData.galleryUrls,
-        product.description = updatedData.description,
+    // Update main image if a new one is uploaded
+    if (data?.mainImage?.buffer) {
+        // Delete old main image
+        if (oldMainImageId) {
+            await cloudinary.uploader.destroy(oldMainImageId);
+        }
 
-        await product.save();
+        const uploadedMainImage = await uploadToCloudinary(data.mainImage.buffer);
+        product.mainImageUrl = uploadedMainImage;
+    }
+
+    // Remove gallery images
+    if (removedGalleryImages && Array.isArray(removedGalleryImages)) {
+        for (const public_id of removedGalleryImages) {
+            await cloudinary.uploader.destroy(public_id);
+        }
+
+        // Filter out removed images from DB
+        product.galleryUrls = product.galleryUrls.filter(
+            (img) => !removedGalleryImages.includes(img.public_id)
+        );
+    }
+
+    // Upload new gallery images
+    if (data.galleryImages?.length) {
+        const uploadedGallery = await Promise.all(
+            data.galleryImages.map(async (img) => {
+                if (!img?.buffer) throw new Error("Invalid gallery image");
+                return await uploadToCloudinary(img.buffer);
+            })
+        );
+
+        product.galleryUrls = [...product.galleryUrls, ...uploadedGallery];
+    }
+
+    // Update remaining product fields
+    product.name = name;
+    product.brand = brand;
+    product.category = category;
+    product.subCategory = subCategory;
+    product.unit = unit;
+    product.type = type;
+    product.price = price;
+    product.mrp = mrp;
+    product.discount = discount;
+    product.stockQuantity = stockQuantity;
+    product.minStock = minStock;
+    product.description = description;
+
+    await product.save();
+
     return product;
-}
+};
+
 
 export const getAllProductService = async () => {
     const products = await Product.find().limit(10);

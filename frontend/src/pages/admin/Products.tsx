@@ -35,7 +35,7 @@ type MainImagePreview = {
 };
 
 type GalleryPreview = {
-  file?: File;
+  file: File;
   preview: string;
   public_id?: string;
 };
@@ -120,7 +120,11 @@ const Products = () => {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
 
-    const existingFileKeys = new Set(images.map((img) => `${img.file.name}-${img.file.size}`));
+    const existingFileKeys = new Set(
+      images
+        .filter((img): img is GalleryPreview & { file: File } => !!img.file) // ✅ TS-safe filter
+        .map((img) => `${img.file.name}-${img.file.size}`)
+    );
 
     const newImages = files
       .filter((file) => !existingFileKeys.has(`${file.name}-${file.size}`)) // prevent duplicates
@@ -155,15 +159,6 @@ const Products = () => {
 
 
 
-  const triggerMainImageSelect = () => {
-    fileInputRef.current?.click();
-  };
-
-  const triggerGalleryImageSelect = () => {
-    multipleFileInputRef.current?.click();
-  };
-
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -194,62 +189,62 @@ const Products = () => {
       description: '',
     }
 
-    if (!formData.name) {
+    if (!formData.name || formData.name.length === 0) {
       newError.name = 'Product Name is required';
       isValid = false;
     }
 
-    if (!formData.brand.trim()) {
+    if (!formData.brand || formData.brand.length === 0) {
       newError.brand = 'Product Brand is required';
       isValid = false;
     }
 
-    if (!formData.category.trim()) {
+    if (!formData.category || formData.category.length === 0) {
       newError.category = 'Product Category is required';
       isValid = false;
     }
 
-    if (!formData.subCategory.trim()) {
+    if (!formData.subCategory || formData.subCategory.length === 0) {
       newError.subCategory = 'Product Sub Category is required';
       isValid = false;
     }
 
-    if (!formData.price.trim()) {
+    if (!formData.price || formData.price.length === 0) {
       newError.price = 'Product Price is required';
       isValid = false;
     }
 
-    if (!formData.mrp.trim()) {
+    if (!formData.mrp || formData.mrp.length === 0) {
       newError.mrp = 'Product MRP is required';
       isValid = false;
     }
 
-    if (Number(formData.price.trim()) > Number(formData.mrp.trim())) {
+    if (Number(formData.price) > Number(formData.mrp)) {
       newError.price = 'Price should be less than MRP'
       isValid = false;
     }
 
-    if (!formData.unit.trim()) {
+    if (!formData.unit || formData.unit.length === 0) {
       newError.unit = 'Product Unit is required';
       isValid = false;
     }
 
-    if (!formData.type.trim()) {
+    if (!formData.type || formData.type.length === 0) {
       newError.type = 'Product Type is required';
       isValid = false;
     }
 
-    if (!formData.stockQuantity.trim()) {
+    if (!formData.stockQuantity || formData.stockQuantity.length === 0) {
       newError.stockQuantity = 'Product Stock Quantity is required';
       isValid = false;
     }
 
-    if (!formData.minStock.trim()) {
+    if (!formData.minStock || formData.minStock.length === 0) {
       newError.minStock = 'Product Minimum Stock is required';
       isValid = false;
     }
 
-    if (!formData.description.trim()) {
+    if (!formData.description || formData.description.length === 0) {
       newError.description = 'Product Description is required';
       isValid = false;
     }
@@ -356,7 +351,7 @@ const Products = () => {
         editingItem.mainImageUrl?.url
           ? {
             preview: editingItem.mainImageUrl.url,
-            file: undefined,
+            file: editingItem.mainImageUrl.url,
             public_id: editingItem.mainImageUrl.public_id,
           }
           : null
@@ -391,7 +386,6 @@ const Products = () => {
   }, [editingItem]);
 
 
-
   const handleUpdateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -404,46 +398,56 @@ const Products = () => {
 
       if (!validateForm()) {
         console.log("Form validation failed.");
+        alert("Form validation failed.");
         return;
       }
 
+
       const formDataToSend = new FormData();
 
-      // Append all text fields
-      Object.entries(formData).forEach(([key, value]) => {
-        formDataToSend.append(key, value);
-      });
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("brand", formData.brand);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("subCategory", formData.subCategory);
+      formDataToSend.append("unit", formData.unit);
+      formDataToSend.append("type", formData.type);
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("mrp", formData.mrp);
+      formDataToSend.append("stockQuantity", formData.stockQuantity);
+      formDataToSend.append("minStock", formData.minStock);
+      formDataToSend.append("description", formData.description);
 
       // Add prodId explicitly
       formDataToSend.append("prodId", editingItem.prodId);
 
-      // If main image replaced
-      if (mainImage?.file) {
+      // Main image - only if updated
+      if (mainImage?.file && typeof mainImage.file !== "string") {
         formDataToSend.append("mainImage", mainImage.file);
         formDataToSend.append("oldMainImageId", editingItem.mainImageUrl?.public_id || "");
       }
 
-      // Add only new gallery images (exclude existing)
+      // Only new gallery images
       images.forEach((img) => {
         if (!("public_id" in img)) {
           formDataToSend.append("galleryImages", img.file);
         }
       });
 
-      // Removed gallery images (for deletion from Cloudinary)
+      // Removed gallery image IDs
       removedGalleryImages.forEach((public_id) => {
         if (public_id) {
-          formDataToSend.append("removedGalleryImages[]", public_id);
+          formDataToSend.append("removedGalleryImages", public_id);
         }
       });
 
-      // Send request
-      const res = await axios.put(`${baseUrl}/products/update`, formDataToSend);
 
-      if (res.status === 200) {
+      // Send update request
+      const res = await axios.put(`${baseUrl}/products/${editingItem.prodId}`, formDataToSend);
+
+      if (res.status === 201) {
         alert("✅ Product updated successfully");
 
-        // Reset form state
+        // Reset form and modal state
         setFormData({
           name: '',
           brand: '',
@@ -463,7 +467,7 @@ const Products = () => {
         setShowModal(false);
         setEditingItem(null);
 
-        // Refresh products
+        // Refresh product list
         const refreshed = await axios.get(`${baseUrl}/products`);
         setProducts(refreshed.data);
       }
@@ -474,6 +478,7 @@ const Products = () => {
       setIsLoading(false);
     }
   };
+
 
 
 
@@ -696,7 +701,7 @@ const Products = () => {
 
                 <button
                   type="button"
-                  onClick={triggerMainImageSelect}
+                  onClick={() => fileInputRef.current?.click()}
                   className="flex items-center justify-center space-x-2 w-full px-4 py-3.5 bg-darkGreen text-white rounded hover:bg-green-700"
                 >
                   <LuUpload />
@@ -733,7 +738,7 @@ const Products = () => {
                 {/* Custom Upload Button */}
                 <button
                   type="button"
-                  onClick={triggerGalleryImageSelect}
+                  onClick={() => multipleFileInputRef.current?.click()}
                   className="flex items-center justify-center space-x-2 w-full px-4 py-3.5 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   <LuUpload />

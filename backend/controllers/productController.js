@@ -26,7 +26,25 @@ export const addProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
     try {
-        const selectedProduct = await updateProductService(req.params.id, req.body);
+
+        console.log("body:", req.body);        // ← should now show all values
+        console.log("files:", req.files);      // ← mainImage and galleryImages
+
+        // ✅ Handle removedGalleryImages (force it to be an array)
+        const removedGalleryImages = Array.isArray(req.body.removedGalleryImages)
+            ? req.body.removedGalleryImages
+            : req.body.removedGalleryImages
+                ? [req.body.removedGalleryImages]
+                : [];
+
+        const selectedProduct = await updateProductService(
+            req.params.id,
+            {
+                ...req.body,
+                mainImage: req.files?.mainImage?.[0],
+                galleryImages: req.files?.galleryImages || [],
+                removedGalleryImages,
+            });
         return res.status(201).json({ message: "Product Added Successfully", product: selectedProduct });
     } catch (error) {
         console.error("Error: ", error);

@@ -10,7 +10,11 @@ router.post('/add', upload.fields([
     { name: "mainImage" },
     { name: "galleryImages" }
 ]), addProduct);
-router.put('/:id', updateProduct);
+
+router.put('/:id', upload.fields([
+    { name: "mainImage" },
+    { name: "galleryImages" }]), updateProduct);
+    
 router.get('/', getAllProducts);
 
 export default router;
