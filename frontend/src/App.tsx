@@ -12,6 +12,7 @@ import AdminLogin from "./pages/admin/AdminLogin"
 import AdminDashboard from "./pages/admin/AdminDashboard"
 import Products from "./pages/admin/Products"
 import Orders from "./pages/admin/Orders"
+import ProductDetailsModal from "./components/admin/ProductDetailsModal"
 
 function App() {
 
@@ -38,6 +39,8 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="orders" element={<Orders />} />
         </Route>
+
+        <Route path="/product-details" element={<ProductDetailsModal productId="783728"/>} />
 
       </Routes>
     </>

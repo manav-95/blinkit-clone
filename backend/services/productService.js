@@ -83,7 +83,7 @@ export const updateProductService = async (prodId, data) => {
         error.statusCode = 400;
         throw error;
     }
-    
+
     const {
         name, brand, category, subCategory, type,
         unit, price, mrp, stockQuantity, minStock,
@@ -155,7 +155,35 @@ export const updateProductService = async (prodId, data) => {
 };
 
 
+export const deleteProductService = async (prodId) => {
+    const product = await Product.findOne({ prodId })
+
+    if (!product) return { success: false, message: "Product not found" };
+
+    if (product.mainImageUrl?.public_id) {
+        await cloudinary.uploader.destroy(product.mainImageUrl.public_id);
+    }
+
+    if (Array.isArray(product.galleryUrls)) {
+        for (const img of product.galleryUrls) {
+            if (img?.public_id) {
+                await cloudinary.uploader.destroy(img.public_id);
+            }
+        }
+    }
+
+    await Product.deleteOne({ prodId })
+    return { success: true };
+}
+
+
 export const getAllProductService = async () => {
     const products = await Product.find().limit(10);
     return products;
+}
+
+export const getProductService = async (productId) => {
+
+    const product = await Product.findOne({ prodId: productId })
+    return product;
 }

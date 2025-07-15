@@ -3,6 +3,7 @@ import axios, { AxiosError } from 'axios'
 import Modal from '../../components/Modal'
 import { LuEye, LuPlus, LuTrash2, LuUpload, LuX } from 'react-icons/lu'
 import { LucideEdit } from 'lucide-react';
+import ProductDetailsModal from '../../components/admin/ProductDetailsModal';
 
 interface ProductType {
   prodId?: string;
@@ -59,6 +60,9 @@ const Products = () => {
   const multipleFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [editingItem, setEditingItem] = useState<ProductType | null>(null)
+
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
 
   const [formData, setFormData] = useState<ProductType>({
     name: '',
@@ -480,6 +484,23 @@ const Products = () => {
   };
 
 
+  const handleProductDelete = async () => {
+    setIsLoading(true)
+    try {
+      const res = await axios.delete(`${baseUrl}/products/${selectedProductId}`)
+      if (res.status === 200) {
+        alert("Product Deleted Successfully")
+        setShowModal(false)
+      }
+    } catch (error) {
+      console.log("Error Deleting Product: ", error)
+      alert("Error Deleting Product")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+
 
 
   useEffect(() => {
@@ -872,16 +893,16 @@ const Products = () => {
                         className="w-12 h-12 rounded-lg object-cover mr-4"
                       />
                       <div>
-                        <div className="text-sm font-medium text-gray-900 capitalize">{product.name}</div>
-                        <div className="text-xs text-gray-600 font-medium">{product?.brand}</div>
-                        <div className="text-xs text-gray-400">{product.unit}</div>
+                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                        <div className="text-xs font-medium text-purple-600">{product?.brand}</div>
+                        <div className="text-xs text-gray-500">{product.unit}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm text-gray-900">{product.category}</div>
-                      <div className="text-xs text-gray-500">{product.subCategory}</div>
+                      <div className="text-xs text-darkGreen">{product.subCategory}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -892,25 +913,28 @@ const Products = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{product?.discount}%</div>
+                      <div className="text-sm font-medium text-darkGreen">{product?.discount}% OFF</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div
-                        className={`text-sm font-medium ${product.stockQuantity < product.minStock ? "text-red-600" : "text-gray-900"
+                        className={`text-sm font-medium ${Number(product.stockQuantity) < 0.5 * Number(product.minStock) ? "text-red-600" : "text-gray-900"
                           }`}
                       >
                         {product.stockQuantity} units
                       </div>
-                      <div className="text-xs text-gray-500">Min: {product.minStock}</div>
+                      <div className="text-xs text-gray-500">Min. Stock {product.minStock}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => {
-                          setModalType("product")
+                          if (product.prodId) {
+                            setSelectedProductId(product.prodId);
+                          }
+                          setModalType("product-details")
                           setShowModal(true)
                         }}
                         className="text-blue-600 hover:text-blue-900"
@@ -928,7 +952,13 @@ const Products = () => {
                         <LucideEdit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => setProducts(products.filter((p) => p.id !== product.id))}
+                        onClick={() => {
+                          if (product.prodId) {
+                            setSelectedProductId(product.prodId);
+                          }
+                          setModalType("delete-product")
+                          setShowModal(true)
+                        }}
                         className="text-red-600 hover:text-red-900"
                       >
                         <LuTrash2 className="w-4 h-4" />
@@ -940,6 +970,51 @@ const Products = () => {
           </tbody>
         </table>
       </div>
+
+      {showModal && modalType === "product-details" && selectedProductId && (
+        <Modal title={"Product Details"} onClose={() => setShowModal(false)} size="lg">
+          <ProductDetailsModal productId={selectedProductId} />
+        </Modal>
+      )}
+
+      {showModal && modalType === "delete-product" && selectedProductId && (
+        <Modal title={"Delete Product"} onClose={() => setShowModal(false)} size="md">
+          <div className='flex items-center justify-center'>
+            <LuTrash2 className='h-20 w-20 text-red-600' />
+          </div>
+          <div className='flex justify-center items-center font-poppins my-5'>
+            <span className='text-center'>Are you really want to delete this product, this process cannot be undone</span>
+          </div>
+
+          {isLoading ? (
+            <>
+              <div
+                className="flex items-center justify-center bg-red-600 text-white py-3 px-6 rounded-lg transition-colors font-medium"
+              >
+                <div className='w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin'></div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className='flex w-full space-x-2 font-poppins'>
+                <button
+                  onClick={handleProductDelete}
+                  className='w-full bg-red-600 py-2 px-4 text-white rounded'
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className='w-full bg-gray-300 hover:bg-gray-400/65 text-gray-700 py-2 px-4 rounded'
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+
+        </Modal>
+      )}
 
     </>
   )
