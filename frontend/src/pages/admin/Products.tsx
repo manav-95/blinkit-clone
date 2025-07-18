@@ -5,6 +5,8 @@ import { LuEye, LuPlus, LuTrash2, LuUpload, LuX } from 'react-icons/lu'
 import { LucideEdit } from 'lucide-react';
 import ProductDetailsModal from '../../components/admin/ProductDetailsModal';
 
+import { superstoreCategories } from '../../data/superStoreCategories'
+
 interface ProductType {
   prodId?: string;
   name: string;
@@ -63,6 +65,11 @@ const Products = () => {
 
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+
+  const categoryObj = superstoreCategories.find((item) => item.name === selectedCategory)
+
 
   const [formData, setFormData] = useState<ProductType>({
     name: '',
@@ -92,32 +99,6 @@ const Products = () => {
     description: '',
   })
 
-
-  const brands = [
-    { name: 'amul', value: 'Amul', },
-    { name: 'pepsi', value: 'Pepsi', },
-    { name: 'cococola', value: 'Cococola', },
-    { name: 'lays', value: 'Lays', },
-    { name: 'balaji', value: 'Balaji', },
-  ]
-
-  const categories = [
-    { name: 'dairy & breakfast', value: 'Dairy & Breakfast', },
-    { name: 'vegetables & fruits', value: 'Vegetables & Fruits', },
-    { name: 'cold drink & juices', value: 'Cold Drink & Juices', },
-    { name: 'munchies', value: 'Munchies', },
-  ]
-
-  const subCategories = [
-    { name: 'milk', value: 'Milk', },
-    { name: 'soft drinks', value: 'Soft Drinks', },
-    { name: 'mango drinks', value: 'Mango Drinks', },
-    { name: 'fruit juices', value: 'fruit juices', },
-    { name: 'chips & crips', value: 'chips & crips', },
-    { name: 'nachos', value: 'nachos', },
-    { name: 'fresh fruits', value: 'fresh fruits', },
-    { name: 'fresh vegetables', value: 'fresh vegetables', },
-  ]
 
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -301,6 +282,9 @@ const Products = () => {
         }
 
         console.log("Product Saved: ", res.data)
+
+        setShowModal(false)
+        getAllProducts();
 
         // Reset state
         setFormData({
@@ -503,18 +487,19 @@ const Products = () => {
 
 
 
-  useEffect(() => {
-    const getAllProducts = async () => {
-      try {
-        const res = await axios.get(`${baseUrl}/products`)
-        if (res) {
-          setProducts(res.data)
-        }
-      } catch (error) {
-        console.error("Error Fetching products: ", error)
-      }
-    };
 
+  const getAllProducts = async () => {
+    try {
+      const res = await axios.get(`${baseUrl}/products`)
+      if (res) {
+        setProducts(res.data)
+      }
+    } catch (error) {
+      console.error("Error Fetching products: ", error)
+    }
+  };
+
+  useEffect(() => {
     getAllProducts();
   }, [])
 
@@ -561,36 +546,19 @@ const Products = () => {
                 />
                 {error.name && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.name}</span>}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Brand</label>
-                <select
-                  name='brand'
-                  value={formData.brand}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 
-                >
-                  <option hidden>Select a brand</option>
-                  {brands.map((brand, index) => (
-                    <option key={index} value={brand.value} className='capitalize'>{brand.name}</option>
-                  ))}
-
-                </select>
-                {error.brand && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.brand}</span>}
-
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <select
                   name='category'
                   value={formData.category}
-                  onChange={handleChange}
+                  onChange={(e) => {handleChange(e); setSelectedCategory(e.target.value)}}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 >
                   <option hidden>Select Category</option>
-                  {categories.map((category, index) => (
-                    <option key={index} value={category.value} className='capitalize'>{category.name}</option>
+                  {superstoreCategories.map((category, index) => (
+                    <option key={index} value={category.name} className='capitalize'>{category.name}</option>
                   ))}
                 </select>
                 {error.category && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.category}</span>}
@@ -606,9 +574,9 @@ const Products = () => {
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
-                    <option hidden>Select Category</option>
-                    {subCategories.map((subCategory, index) => (
-                      <option key={index} value={subCategory.value} className='capitalize'>{subCategory.name}</option>
+                    <option hidden>Select SubCategory</option>
+                    {categoryObj?.subCategories.map((subCategory, index) => (
+                      <option key={index} value={subCategory} className='capitalize'>{subCategory}</option>
                     ))}
 
                   </select>
@@ -616,6 +584,26 @@ const Products = () => {
 
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Brand</label>
+                <select
+                  name='brand'
+                  value={formData.brand}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+
+                >
+                  <option hidden>Select a brand</option>
+                  {categoryObj?.brands.map((brand, index) => (
+                    <option key={index} value={brand} className='capitalize'>{brand}</option>
+                  ))}
+
+                </select>
+                {error.brand && <span className='font-poppins text-sm text-red-500 mt-0.5'>{error.brand}</span>}
+
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Price (₹)</label>
                 <input
@@ -844,7 +832,7 @@ const Products = () => {
       )}
 
 
-      <div className="overflow-x-auto px-6 py-4">
+      <div className="overflow-auto px-6 py-4">
         <table className="w-full font-poppins">
           <thead className="bg-gradient-to-r from-green-600 to-green-800">
             <tr>
@@ -890,36 +878,38 @@ const Products = () => {
                       <img
                         src={product?.mainImageUrl?.url || "/placeholder.svg"}
                         alt={product.name}
-                        className="w-12 h-12 rounded-lg object-cover mr-4"
+                        className="w-14 h-14 rounded object-cover mr-3 shadow border"
                       />
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                        <div className="text-xs font-medium text-purple-600">{product?.brand}</div>
+                        <div className="text-sm font-medium text-gray-900 capitalize">{product.name}</div>
+                        <div className="text-xs font-medium text-purple-600 capitalize">{product?.brand}</div>
                         <div className="text-xs text-gray-500">{product.unit}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm text-gray-900">{product.category}</div>
-                      <div className="text-xs text-darkGreen">{product.subCategory}</div>
+                      <div className="text-sm text-gray-900 capitalize">{product.category}</div>
+                      <div className="text-xs text-darkGreen capitalize">{product.subCategory}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">₹{product.price}</div>
-                      <div className="text-xs text-gray-500 line-through">MRP: ₹{product.mrp}</div>
+                      {product.mrp > product.price &&
+                        <div className="text-xs text-gray-500 line-through">MRP: ₹{product.mrp}</div>
+                      }
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-darkGreen">{product?.discount}% OFF</div>
+                      <div className="text-sm font-medium text-darkGreen">{Number(product?.discount) === 0 ? `N/A` : `${product?.discount + '% OFF'}`}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div
-                        className={`text-sm font-medium ${Number(product.stockQuantity) < 0.5 * Number(product.minStock) ? "text-red-600" : "text-gray-900"
+                        className={`text-sm font-medium capitalize ${Number(product.stockQuantity) < Number(product.minStock) ? "text-red-600" : "text-gray-900"
                           }`}
                       >
                         {product.stockQuantity} units
