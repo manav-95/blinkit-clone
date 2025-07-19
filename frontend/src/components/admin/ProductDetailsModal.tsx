@@ -130,7 +130,7 @@ const ProductDetailsModal = ({ productId }: ProductDetailsModalProps) => {
                     <div><span className="font-semibold">Sub Category:</span> {productDetail.subCategory}</div>
                     <div><span className="font-semibold">Type:</span> {productDetail.type}</div>
                     <div><span className="font-semibold">Unit:</span> {productDetail.unit}</div>
-                    <div><span className="font-semibold">Stock Qty:</span> {productDetail.stockQuantity}</div>
+                    <div><span className="font-semibold">Stock Qty:</span><span className={`${productDetail.stockQuantity < productDetail.minStock ? 'text-red-500' : ''} ml-1`}>{productDetail.stockQuantity}</span></div>
                     <div><span className="font-semibold">Min Stock:</span> {productDetail.minStock}</div>
                 </div>
             </div>

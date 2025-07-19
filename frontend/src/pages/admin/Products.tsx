@@ -51,6 +51,7 @@ const Products = () => {
 
   const [showModal, setShowModal] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [dataLoading, setDataLoading] = useState<boolean>(true)
 
   const [images, setImages] = useState<GalleryPreview[] | []>([]);
   const [products, setProducts] = useState<ProductType[] | []>([]);
@@ -66,6 +67,8 @@ const Products = () => {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const [query, setQuery] = useState<string>('')
 
 
   const categoryObj = superstoreCategories.find((item) => item.name === selectedCategory)
@@ -99,7 +102,98 @@ const Products = () => {
     description: '',
   })
 
+  useEffect(() => {
+    setDataLoading(true)
+    const searchProducts = setTimeout(async () => {
+      const term = query.trim().toLowerCase();
+      try {
+        if (term.length > 2) {
+          const res = await axios.get(`${baseUrl}/products/search/${term}`)
+          if (res) {
+            setProducts(res.data.products)
+          } else {
+            setProducts([])
+          }
+        } else {
+          const res = await axios.get(`${baseUrl}/products`)
+          if (res) {
+            setProducts(res.data)
+          } else {
+            setProducts([])
+          }
+        }
+      } catch (error) {
+        console.log("Error Searching Products: ", error)
+      } finally {
+        setDataLoading(false)
+      }
+    }, 300)
 
+    return () => clearTimeout(searchProducts);
+  }, [query])
+
+  useEffect(() => {
+    if (editingItem) {
+      setFormData({
+        prodId: editingItem.prodId,
+        name: editingItem.name,
+        brand: editingItem.brand,
+        category: editingItem.category,
+        subCategory: editingItem.subCategory,
+        price: editingItem.price,
+        mrp: editingItem.mrp,
+        unit: editingItem.unit,
+        type: editingItem.type,
+        stockQuantity: editingItem.stockQuantity,
+        minStock: editingItem.minStock,
+        description: editingItem.description,
+      });
+      setSelectedCategory(editingItem.category)
+
+      setMainImage(
+        editingItem.mainImageUrl?.url
+          ? {
+            preview: editingItem.mainImageUrl.url,
+            file: editingItem.mainImageUrl.url,
+            public_id: editingItem.mainImageUrl.public_id,
+          }
+          : null
+      );
+
+      setImages(
+        (editingItem.galleryUrls || []).map((img) => ({
+          preview: img.url,
+          file: undefined,
+          public_id: img.public_id,
+        }))
+      );
+    } else {
+
+      setSelectedCategory(null)
+      // If no editing item, reset everything
+      setFormData({
+        name: '',
+        brand: '',
+        category: '',
+        subCategory: '',
+        price: '',
+        mrp: '',
+        unit: '',
+        type: '',
+        stockQuantity: '',
+        minStock: '',
+        description: '',
+      });
+
+      setMainImage(null);
+      setImages([]);
+    }
+
+    return () => {
+      setSelectedCategory(null)
+    }
+
+  }, [editingItem, showModal]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -121,8 +215,6 @@ const Products = () => {
     setImages((prev) => [...prev, ...newImages]);
   };
 
-
-
   const handleRemove = (index: number) => {
     setImages((prevImages) => {
       const removedImage = prevImages[index] as GalleryPreview & { public_id?: string };
@@ -142,8 +234,6 @@ const Products = () => {
     });
   };
 
-
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -155,7 +245,6 @@ const Products = () => {
       [e.target.name]: "",
     }));
   };
-
 
   const validateForm = () => {
     let isValid = true;
@@ -243,7 +332,6 @@ const Products = () => {
     return isValid;
   }
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true)
@@ -317,62 +405,6 @@ const Products = () => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (editingItem) {
-      setFormData({
-        prodId: editingItem.prodId,
-        name: editingItem.name,
-        brand: editingItem.brand,
-        category: editingItem.category,
-        subCategory: editingItem.subCategory,
-        price: editingItem.price,
-        mrp: editingItem.mrp,
-        unit: editingItem.unit,
-        type: editingItem.type,
-        stockQuantity: editingItem.stockQuantity,
-        minStock: editingItem.minStock,
-        description: editingItem.description,
-      });
-
-      setMainImage(
-        editingItem.mainImageUrl?.url
-          ? {
-            preview: editingItem.mainImageUrl.url,
-            file: editingItem.mainImageUrl.url,
-            public_id: editingItem.mainImageUrl.public_id,
-          }
-          : null
-      );
-
-      setImages(
-        (editingItem.galleryUrls || []).map((img) => ({
-          preview: img.url,
-          file: undefined,
-          public_id: img.public_id,
-        }))
-      );
-    } else {
-      // If no editing item, reset everything
-      setFormData({
-        name: '',
-        brand: '',
-        category: '',
-        subCategory: '',
-        price: '',
-        mrp: '',
-        unit: '',
-        type: '',
-        stockQuantity: '',
-        minStock: '',
-        description: '',
-      });
-
-      setMainImage(null);
-      setImages([]);
-    }
-  }, [editingItem]);
-
 
   const handleUpdateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -467,7 +499,6 @@ const Products = () => {
     }
   };
 
-
   const handleProductDelete = async () => {
     setIsLoading(true)
     try {
@@ -475,6 +506,7 @@ const Products = () => {
       if (res.status === 200) {
         alert("Product Deleted Successfully")
         setShowModal(false)
+        getAllProducts();
       }
     } catch (error) {
       console.log("Error Deleting Product: ", error)
@@ -483,10 +515,6 @@ const Products = () => {
       setIsLoading(false)
     }
   }
-
-
-
-
 
   const getAllProducts = async () => {
     try {
@@ -499,17 +527,17 @@ const Products = () => {
     }
   };
 
-  useEffect(() => {
-    getAllProducts();
-  }, [])
+  // useEffect(() => {
+  //   getAllProducts();
+  // }, [])
 
 
   return (
     <>
-      <div className='px-6 py-4'>
+      <div className='px-6 mt-5'>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Product Management ({products.length})</h1>
             <p className="text-gray-600 mt-1">Manage your product catalog and inventory</p>
           </div>
           <div className="flex items-center gap-3">
@@ -526,7 +554,17 @@ const Products = () => {
             </button>
           </div>
         </div>
+
+        <div className='flex justify-between items-center mt-5'>
+          <input
+            type="text"
+            onChange={(e) => { setQuery(e.target.value) }}
+            className={`${query.length > 0 ? 'border border-darkGreen' : 'border'} w-full outline-none py-3.5 px-4 rounded-xl font-poppins text-sm`}
+            placeholder='Search Product by Id, name, category'
+          />
+        </div>
       </div>
+
 
 
       {showModal && modalType === "product" && (
@@ -552,7 +590,10 @@ const Products = () => {
                 <select
                   name='category'
                   value={formData.category}
-                  onChange={(e) => {handleChange(e); setSelectedCategory(e.target.value)}}
+                  onChange={(e) => {
+                    handleChange(e);
+                    setSelectedCategory(e.target.value)
+                  }}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 >
@@ -569,6 +610,7 @@ const Products = () => {
                 <div className='max-h-20'>
                   <select
                     name='subCategory'
+                    disabled={!selectedCategory}
                     value={formData.subCategory}
                     onChange={handleChange}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -589,6 +631,7 @@ const Products = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Product Brand</label>
                 <select
                   name='brand'
+                  disabled={!selectedCategory}
                   value={formData.brand}
                   onChange={handleChange}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -831,60 +874,70 @@ const Products = () => {
         </Modal>
       )}
 
-
-      <div className="overflow-auto px-6 py-4">
-        <table className="w-full font-poppins">
-          <thead className="bg-gradient-to-r from-green-600 to-green-800">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Id
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Product
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Category
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Price
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Discount
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Stock
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {products
-              // .filter(
-              //   (product) =>
-              //     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              //     product.category.toLowerCase().includes(searchTerm.toLowerCase()),
-              // )
-              .map((product) => (
-                <tr key={product?.prodId} className="hover:bg-gray-50">
+      {dataLoading ? (
+        <div className="grid grid-cols-1 gap-4 px-6 py-4">
+          {[...Array(6)].map((_, i) => (
+            <>
+              <div key={i} className={`animate-pulse bg-gradient-to-r from-slate-100 to-slate-200 rounded-md ${i === 0 ? 'h-12' : 'h-20'} w-full shadow`}></div>
+            </>
+          ))}
+        </div>
+      ) : products.length > 0 ? (
+        <div className="overflow-auto px-6 py-4">
+          <table className="w-full font-poppins">
+            <thead className="bg-gradient-to-r from-green-600 to-green-800">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Id
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Product
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Brand
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Price
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Discount
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Stock
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {products.reverse().map((product) => (
+                <tr key={product?.prodId} className="hover:bg-slate-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{product.prodId}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
+                    <div className="flex items-center max-w-64">
                       <img
                         src={product?.mainImageUrl?.url || "/placeholder.svg"}
                         alt={product.name}
-                        className="w-14 h-14 rounded object-cover mr-3 shadow border"
+                        className={`w-14 h-14 rounded object-cover mr-3 border`}
                       />
                       <div>
-                        <div className="text-sm font-medium text-gray-900 capitalize">{product.name}</div>
-                        <div className="text-xs font-medium text-purple-600 capitalize">{product?.brand}</div>
+                        <div className="text-xs font-medium text-gray-900 capitalize text-wrap line-clamp-2">{product.name}</div>
+                        {/* <div className="text-xs font-medium text-purple-600 capitalize">{product?.brand}</div> */}
                         <div className="text-xs text-gray-500">{product.unit}</div>
                       </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm text-gray-900 capitalize">{product.brand}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -936,6 +989,7 @@ const Products = () => {
                           setEditingItem(product)
                           setModalType("product")
                           setShowModal(true)
+
                         }}
                         className="text-green-600 hover:text-green-900"
                       >
@@ -957,15 +1011,34 @@ const Products = () => {
                   </td>
                 </tr>
               ))}
-          </tbody>
-        </table>
-      </div>
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center text-center py-10">
+          <img
+            src="/not-found.webp"
+            alt="No Products Found"
+            className="w-64 h-64 mb-6"
+          />
+          <h2 className="text-2xl font-semibold mb-2">🔍 No Products Found</h2>
+          <p className="text-gray-600 mb-4">
+            We couldn’t find any matching products. Please try a different search term.
+          </p>
+          <ul className="text-sm text-gray-500 list-disc list-inside space-y-1">
+            <li>Check for spelling mistakes</li>
+            <li>Try using broader keywords</li>
+            <li>Search by product name or ID</li>
+          </ul>
+        </div>
+      )}
 
       {showModal && modalType === "product-details" && selectedProductId && (
         <Modal title={"Product Details"} onClose={() => setShowModal(false)} size="lg">
           <ProductDetailsModal productId={selectedProductId} />
         </Modal>
       )}
+
 
       {showModal && modalType === "delete-product" && selectedProductId && (
         <Modal title={"Delete Product"} onClose={() => setShowModal(false)} size="md">

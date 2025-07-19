@@ -1,15 +1,15 @@
 export const superstoreCategories = [
   {
-    name: "coldDrinks & Juices",
+    name: "cold drinks & juices",
     brands: [
-      "Cocacola",
-      "Pepsi",
-      "Thums Up",
-      "Sprite",
-      "Fanta",
-      "Real Active",
-      "Bisleri",
-      "Paper Boat"
+      "cocacola",
+      "pepsi",
+      "thumbs up",
+      "sprite",
+      "fanta",
+      "real active",
+      "bisleri",
+      "paper boat"
     ],
     subCategories: [
       "soft drinks",
@@ -22,15 +22,20 @@ export const superstoreCategories = [
     ]
   },
   {
-    name: "dairy & Breakfast",
+    name: "dairy & breakfast",
     brands: [
-      "Amul",
-      "Mother Dairy",
-      "Yakult",
-      "Epigamia",
-      "Sofit",
-      "Raw Pressery",
-      "Nutralite"
+      "amul",
+      "mother dairy",
+      "yakult",
+      "eggoz",
+      "unique life",
+      "sofit",
+      "raw pressery",
+      "nutralite",
+      "yojana",
+      "gokul",
+      "nestle",
+      "table white",
     ],
     subCategories: [
       "milk",
@@ -49,12 +54,12 @@ export const superstoreCategories = [
   {
     name: "munchies",
     brands: [
-      "Lay’s",
-      "Doritos",
-      "Pringles",
-      "Haldiram’s",
-      "Unibic",
-      "Sunfeast"
+      "lay’s",
+      "doritos",
+      "pringles",
+      "haldiram’s",
+      "unibic",
+      "sunfeast"
     ],
     subCategories: [
       "chips & crisps",
@@ -67,14 +72,14 @@ export const superstoreCategories = [
     ]
   },
   {
-    name: "sauces & Spreads",
+    name: "sauces & spreads",
     brands: [
-      "Kissan",
-      "Maggi",
-      "Amul",
-      "Nutella",
-      "Hershey’s",
-      "Kraft"
+      "kissan",
+      "maggi",
+      "amul",
+      "nutella",
+      "hershey’s",
+      "kraft"
     ],
     subCategories: [
       "tomato & chilli ketchups",
@@ -87,32 +92,32 @@ export const superstoreCategories = [
     ]
   },
   {
-    name: "sweetTooth",
+    name: "sweet tooth",
     brands: [
-      "Maggi",
-      "Nestlé",
-      "Mondelēz",
-      "Cadbury",
-      "Hershey’s"
+      "maggi",
+      "nestlé",
+      "mondelēz",
+      "cadbury",
+      "hershey’s"
     ],
     subCategories: [
       "energy bars",
       "ice cream frozen deserts",
       "chocolate packs",
       "chocolates",
-      "c & ies & gums",
+      "candies & gums",
       "syrups",
       "mouth fresheners"
     ]
   },
   {
-    name: "beauty & Cosmetics",
+    name: "beauty & cosmetics",
     brands: [
-      "Lakmé",
-      "Maybelline",
-      "L’Oréal",
-      "Pond’s",
-      "Nivea",
+      "lakmé",
+      "maybelline",
+      "l’Oréal",
+      "pond’s",
+      "nivea",
       "patanjali",
     ],
     subCategories: [
@@ -126,13 +131,13 @@ export const superstoreCategories = [
     ]
   },
   {
-    name: "aataRice & Dal",
+    name: "aata rice & dal",
     brands: [
-      "Aashirvaad",
-      "Patanjali",
-      "Organic India",
-      "24 Mantra",
-      "Daawat"
+      "aashirvaad",
+      "patanjali",
+      "organic india",
+      "24 mantra",
+      "daawat"
     ],
     subCategories: [
       "aata",

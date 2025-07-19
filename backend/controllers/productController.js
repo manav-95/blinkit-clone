@@ -1,5 +1,5 @@
 import Product from "../models/Product.js";
-import { addProductService, deleteProductService, getAllProductService, getProductService, updateProductService } from "../services/productService.js";
+import { addProductService, deleteProductService, getAllProductService, getProductService, searchProductService, updateProductService } from "../services/productService.js";
 
 
 
@@ -89,6 +89,17 @@ export const getProduct = async (req, res) => {
         return res.status(200).json({ success: true, message: "Product Details Fetched Successfully", product })
     } catch (error) {
         console.error("Error getting product details", error)
+        return res.status(500).json({ message: "Server Error" });
+    }
+}
+
+export const getSearchedProducts = async (req, res) => {
+    try {
+        const query = req.params.term;
+        const products = await searchProductService(query);
+        return res.status(200).json({ success: true, message: "Product Searched Successfully", products })
+    } catch (error) {
+        console.error("Error searching product", error)
         return res.status(500).json({ message: "Server Error" });
     }
 }

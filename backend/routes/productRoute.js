@@ -1,5 +1,5 @@
 import express from 'express'
-import { addProduct, deleteProduct, getAllProducts, getProduct, updateProduct } from '../controllers/productController.js';
+import { addProduct, deleteProduct, getAllProducts, getProduct, getSearchedProducts, updateProduct } from '../controllers/productController.js';
 import multer from 'multer';
 
 const upload = multer();
@@ -20,5 +20,7 @@ router.get('/', getAllProducts);
 router.get('/:id', getProduct);
 
 router.delete('/:id', deleteProduct);
+
+router.get('/search/:term', getSearchedProducts);
 
 export default router;

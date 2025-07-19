@@ -178,7 +178,7 @@ export const deleteProductService = async (prodId) => {
 
 
 export const getAllProductService = async () => {
-    const products = await Product.find().limit(10);
+    const products = await Product.find().limit(100);
     return products;
 }
 
@@ -187,3 +187,23 @@ export const getProductService = async (productId) => {
     const product = await Product.findOne({ prodId: productId })
     return product;
 }
+
+export const searchProductService = async (query) => {
+    const products = await Product.find({
+        $or: [
+            { name: { $regex: query, $options: 'i' } },
+            { category: { $regex: query, $options: 'i' } },
+            {
+                $expr: {
+                    $regexMatch: {
+                        input: { $toString: '$prodId' },
+                        regex: query,
+                        options: 'i',
+                    }
+                }
+            }
+        ]
+    }).limit(10);
+
+    return products;
+};

@@ -65,8 +65,8 @@ const AdminSidebar = () => {
           return (
             <NavLink key={index} to={`/admin/${link.path}`} className={({ isActive }) =>
               isActive
-                ? 'group flex items-center border border-blue-100 py-2.5 px-4 bg-blue-50 text-blue-500 font-medium text-[1.105rem] transition-all rounded-xl'
-                : 'group flex items-center py-2.5 border border-transparent px-4 hover:bg-slate-50 text-gray-700 font-medium text-[1.105rem] transition-all rounded-xl'
+                ? 'group flex items-center py-2.5 px-4 bg-gradient-to-r from-green-600 to-green-700 text-white font-medium text-[1.105rem] transition-all rounded-lg'
+                : 'group flex items-center py-2.5 px-4 hover:bg-slate-100 text-gray-700 font-medium text-[1.105rem] transition-all rounded-lg'
             }>
               <Icon className={`h-5 w-5 flex-shrink-0 mr-3`} />
               <span>{link.name}</span>
