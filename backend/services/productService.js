@@ -178,7 +178,7 @@ export const deleteProductService = async (prodId) => {
 
 
 export const getAllProductService = async () => {
-    const products = await Product.find().limit(100);
+    const products = await Product.find();
     return products;
 }
 
@@ -207,3 +207,13 @@ export const searchProductService = async (query) => {
 
     return products;
 };
+
+
+export const getProductsByCategoryService = async (category) => {
+    const products = await Product.find({ category });
+    return products;
+}
+export const getProductsByBrandService = async (brand) => {
+    const products = await Product.find({ brand: brand });
+    return products;
+}

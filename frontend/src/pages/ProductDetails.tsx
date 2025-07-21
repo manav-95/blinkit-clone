@@ -7,15 +7,49 @@ import { Swiper as SwiperType } from 'swiper'
 import { Navigation } from 'swiper/modules';
 import 'swiper/css'
 import 'swiper/css/navigation'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { products } from '../data/productData'
 
 import { useLocation } from "../contexts/LocationContext";
 import { formatDeliveryTime } from "../utils/FormatDeliveryTime";
 
 import { useCart } from "../contexts/CartContext";
+import axios from 'axios'
 
-import { type CartItemType } from '../types/CartItemType'
+// import { type CartItemType } from '../types/CartItemType'
+
+
+interface CartItemType {
+    id: number;
+    quantity: number;
+}
+
+
+interface ProductType {
+    prodId: number;
+    name: string;
+    brand: string;
+    category: string;
+    subCategory: string;
+    price: number;
+    mrp: number;
+    discount: number;
+    unit: string;
+    type: string;
+    stockQuantity: number;
+    minStock: number;
+    description: string;
+    mainImageUrl: {
+        url: string;
+        public_id: string;
+    };
+    galleryUrls: {
+        url: string;
+        public_id: string;
+    }[];
+    cartItem: CartItemType;
+}
+
 
 const ProductDetails = () => {
 
@@ -30,19 +64,19 @@ const ProductDetails = () => {
 
     const cartItem: CartItemType = cart.find((item) => item.id === Number(productId))
 
-    const product: CartItemType | undefined = rawProduct
-        ? {
-            id: rawProduct.id,
-            productName: rawProduct.productName,
-            productImage: rawProduct.productImage,
-            productPrice: rawProduct.discountPrice,
-            productMrp: rawProduct.mrp,
-            unit: rawProduct.unit,
-            quantity: rawProduct.quantity,
-            category: rawProduct.category,
-            subCategory: rawProduct.subCategory,
-        }
-        : undefined;
+    // const product: CartItemType | undefined = rawProduct
+    //     ? {
+    //         id: rawProduct.id,
+    //         productName: rawProduct.productName,
+    //         productImage: rawProduct.productImage,
+    //         productPrice: rawProduct.discountPrice,
+    //         productMrp: rawProduct.mrp,
+    //         unit: rawProduct.unit,
+    //         quantity: rawProduct.quantity,
+    //         category: rawProduct.category,
+    //         subCategory: rawProduct.subCategory,
+    //     }
+    //     : undefined;
 
     const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
     const [showZoom, setShowZoom] = useState<boolean>(false);
@@ -52,23 +86,15 @@ const ProductDetails = () => {
     const rightRef = useRef<HTMLDivElement | null>(null);
     const [leftScrolledToEnd, setLeftScrolledToEnd] = useState<boolean>(false);
 
+    const [product, setProduct] = useState<ProductType | null>(null)
 
-    const swiperImages = [
-        product?.productImage,
-        "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/8622bfed-5e2d-415d-8a85-99c5fb7bac04.jpg?ts=1737543569",
-        'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/dace7334-173f-4ab6-ad87-2209b11bc127.jpg?ts=1737543570',
-        "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/f4d448c9-51cc-4ba4-8149-cdc65bb7c1bf.jpg?ts=1737543570",
-        "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/7f62d4b4-743d-45e1-adfc-44ffac1d2b42.jpg?ts=1737543570",
-        "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/91231610-e1f3-44d3-a4a0-73207aa44e60.jpg",
-        "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/44dfacd8-f142-4d79-8c70-795e7e1832dd.jpg",
-        "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/963fd311-08ab-45a3-8ace-e46c0da4c75d.jpg",
-        "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/2f134c2f-2721-492e-bb49-6fcc42f1f8b4.jpg",
-        "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/b2e1a27e-5fb4-406b-9f7f-567750124d46.jpg",
-        "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/2488a23e-afd6-47e1-9e35-5f3cf3e96678.jpg",
+    const gallery = product?.galleryUrls.map(item => item.url) || []
 
-    ]
+    const swiperImages = product?.mainImageUrl.url
+        ? [product?.mainImageUrl.url, ...gallery,]
+        : [...gallery]
 
-    const [activeImage, setActiveImage] = useState(swiperImages[0])
+    const [activeImage, setActiveImage] = useState<string | undefined>(undefined)
 
     const swiperRef = useRef<SwiperType | null>(null);
 
@@ -138,9 +164,31 @@ const ProductDetails = () => {
         };
     }, []);
 
+    useEffect(() => {
+        if (swiperImages.length > 0) {
+            setActiveImage(swiperImages[0])
+        }
+    }, [swiperImages.length])
 
 
 
+    useEffect(() => {
+        const getProductDetails = async () => {
+            try {
+                const res = await axios.get(`${baseUrl}/products/${productId}`)
+                if (res) {
+                    setProduct(res.data.product)
+                    setActiveImage(product?.mainImageUrl.url)
+                } else {
+                    setProduct(null)
+                }
+            } catch (error) {
+                console.log("Error fetching Product Details: ", error);
+            }
+        }
+
+        getProductDetails()
+    }, [productId])
 
 
 
@@ -205,12 +253,14 @@ const ProductDetails = () => {
                             )}
                         </div>
                         <div className='py-2 flex items-center px-8 space-x-5'>
-                            <button
-                                onClick={() => swiperRef?.current?.slidePrev()}
-                                className='p-2.5 bg-white shadow-md hover:bg-gray-50 active:bg-white rounded-full border'
-                            >
-                                <FaChevronLeft />
-                            </button>
+                            {swiperImages.length >= 7 &&
+                                <button
+                                    onClick={() => swiperRef?.current?.slidePrev()}
+                                    className='p-2.5 bg-white shadow-md hover:bg-gray-50 active:bg-white rounded-full border'
+                                >
+                                    <FaChevronLeft />
+                                </button>
+                            }
                             <Swiper
                                 onSwiper={(swiper) => {
                                     swiperRef.current = swiper;
@@ -218,9 +268,9 @@ const ProductDetails = () => {
                                 slidesPerView={6}
                                 slidesPerGroup={1}
                                 modules={[Navigation]}
-                                spaceBetween="10px"
+                                spaceBetween={10}
                                 speed={400}
-                                className=''
+                                className='my-1.5 w-full'
                             >
                                 {swiperImages.map((item, index) =>
                                     <SwiperSlide key={index} className=''>
@@ -236,25 +286,36 @@ const ProductDetails = () => {
                                     </SwiperSlide>
                                 )}
                             </Swiper>
-                            <button
-                                onClick={() => swiperRef?.current?.slideNext()}
-                                className='p-2.5 bg-white shadow-md hover:bg-gray-50 active:bg-white rounded-full border'
-                            >
-                                <FaChevronRight />
-                            </button>
+                            {swiperImages.length >= 7 &&
+                                <button
+                                    onClick={() => swiperRef?.current?.slideNext()}
+                                    className='p-2.5 bg-white shadow-md hover:bg-gray-50 active:bg-white rounded-full border'
+                                >
+                                    <FaChevronRight />
+                                </button>
+                            }
                         </div>
 
-                        <div className='px-8'>
-                            <div className='my-10 font-poppins w-fit'>
-                                <h1 className='font-bold'>Highlights</h1>
-                                <div className='text-sm flex flex-col items-center my-3.5 bg-lightGray py-5 px-5 rounded-xl'>
-                                    <p className='text-xs'>Type</p>
-                                    <p className='font-medium'>White Bread</p>
+                        {product.type &&
+                            <div className='px-8'>
+                                <div className='my-8 font-poppins w-fit'>
+                                    <h1 className='font-bold'>Highlights</h1>
+                                    <div className='text-sm flex flex-col items-center my-3.5 bg-lightGray py-5 px-5 rounded-xl'>
+                                        <p className='text-xs'>Type</p>
+                                        <p className='font-medium'>{product.type}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        }
 
-                        {Array.from({ length: 30 }).map((_, i) => (
+                        {product.description &&
+                            <div className='px-8 font-poppins'>
+                                <h1 className='font-bold'>Description</h1>
+                                <p className='text-xs my-3.5'>{product.description}</p>
+                            </div>
+                        }
+
+                        {Array.from({ length: 10 }).map((_, i) => (
                             <div key={i} className="p-4 rounded">
                                 Left Content {i + 1}
                             </div>
@@ -288,16 +349,16 @@ const ProductDetails = () => {
                             <span>/</span>
                             <button onClick={() => navigate(`/cn/${product.category}`)} className='hover:text-darkGreen transition-colors py-1'>{product?.category}</button>
                             <span>/</span>
-                            <span className='text-gray-500 py-1'>{product.productName}</span>
+                            <span className='text-gray-500 py-1'>{product.name}</span>
                         </div>
                         <div className='flex flex-col items-start justify-center my-2 space-y-0.5'>
-                            <h1 className='font-poppins font-bold text-xl'>{product.productName}</h1>
+                            <h1 className='font-poppins font-bold text-xl'>{product.name}</h1>
                             <div className="flex items-center space-x-1 bg-[#f8f8f8] rounded w-fit px-1 py-0.5">
                                 <LuTimer className="h-3 w-3 flex-shrink-0" />
                                 <span className="text-[9px] font-okraish font-bold uppercase tracking-wide text-gray-900">{estimatedTime ? `${formatDeliveryTime(parseInt(estimatedTime))}` : `8 mins`}</span>
                             </div>
                         </div>
-                        <div className='flex justify-between items-center border-y py-2'>
+                        <Link to={`/br/${product.brand}`} className='flex justify-between items-center border-y py-2'>
                             <div className='flex justify-start items-center space-x-2'>
 
                                 <img
@@ -306,21 +367,24 @@ const ProductDetails = () => {
                                     className='border h-9 w-9 rounded-lg'
                                 />
                                 <div className='text-xs font-poppins'>
-                                    <p className='font-semibold tracking-wide'>Britannia</p>
+                                    <p className='font-semibold tracking-wide'>{product.brand}</p>
                                     <p className='text-darkGreen'>Explore all products</p>
                                 </div>
                             </div>
                             <div>
                                 <FaArrowRightLong className='h-4 w-4 flex-shrink-0 text-gray-600 mr-4' />
                             </div>
-                        </div>
+                        </Link>
                         <div className='flex justify-between items-center my-4'>
                             <div className=''>
-                                <p className='font-poppins font-semibold text-xs text-gray-500'>{product.unit}</p>
+                                <p className='font-poppins font-medium text-xs text-gray-500'>{product.unit === "1 L" ? product.unit + ' , 1 ltr' : product.unit}</p>
                                 <div className='flex items-center justify-start'>
-                                    <p className='my-0.5 font-bold text'>₹{product.productPrice}</p>
-                                    {product.productMrp &&
-                                        <p className='my-0.5 line-through font-medium text ml-1.5 text-gray-500'>₹{product.productMrp}</p>
+                                    <p className='my-0.5 font-bold text'>₹{product.price}</p>
+                                    {product.mrp > product.price &&
+                                        <p className='my-0.5 font-normal text-sm ml-1.5 text-gray-600'>MRP <span className='line-through text-gray-500'>₹{product.mrp}</span></p>
+                                    }
+                                    {product.discount > 0 &&
+                                        <div className='bg-blue-500 text-white text-[10px] font-semibold px-1.5 py-0.5 ml-1 rounded-sm tracking-wide'>{product.discount}% OFF</div>
                                     }
                                 </div>
                                 <p className='text-[10px] font-medium text-gray-500'>(inclusive of all taxes)</p>
@@ -343,13 +407,9 @@ const ProductDetails = () => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
                                                 addToCart({
-                                                    id: product.id,
-                                                    productName: product.productName,
-                                                    productPrice: product.productPrice,
-                                                    productMrp: product.productMrp,
-                                                    productImage: product.productImage,
+                                                    id: product.prodId,
                                                     quantity: 1,
-                                                    unit: product.unit,
+
                                                 })
                                             }}
                                             className='bg-darkGreen max-w-32 text-white font-poppins px-4 py-2 rounded-md'>

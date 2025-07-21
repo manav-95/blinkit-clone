@@ -42,11 +42,11 @@ interface ProductType {
 }
 
 
-const CategoryProducts = () => {
+const ProductsByBrand = () => {
 
-    const { categoryName } = useParams();
+    const { brandName } = useParams();
 
-    const decodedCategoryName = decodeURIComponent(categoryName || '')
+    const decodedBrandName = decodeURIComponent(brandName || '')
 
     const { cart } = useCart();
 
@@ -55,10 +55,9 @@ const CategoryProducts = () => {
     useEffect(() => {
         const getProducts = async () => {
             try {
-                const res = await axios.get(`${baseUrl}/products?category=${decodedCategoryName}`)
+                const res = await axios.get(`${baseUrl}/products/brand/${decodedBrandName}`)
                 if (res) {
-                    setProducts(res.data)
-                   // console.log(res.data)
+                    setProducts(res.data.product)
                 } else {
                     setProducts([])
                 }
@@ -68,8 +67,7 @@ const CategoryProducts = () => {
         }
 
         getProducts()
-    }, [categoryName])
-
+    }, [brandName])
 
 
     return (
@@ -77,12 +75,12 @@ const CategoryProducts = () => {
             <div className='max-w-7xl mx-auto px-4'>
                 <div className='flex flex-col items-start justify-start p-1 bg-gray-100 rounded-b-xl'>
                     <div className='flex justify-start items-center h-10 bg-white shadow border-b border-gray-300 rounded-sm w-full px-2'>
-                        <span className='capitalize font-poppins font-semibold text-sm'>Buy {categoryName} online</span>
+                        <span className='capitalize font-poppins font-semibold text-sm'>Buy {brandName} online</span>
                     </div>
                     <div className='overflow-y-auto overflow-x-hidden scroll-smooth w-full h-[80vh]'>
                         <div className='grid grid-cols-6 gap-y-2 gap-x-2 p-2'>
                             {products
-                            .sort((a,b) => b.prodId - a.prodId)
+                                .sort((a, b) => b.prodId - a.prodId)
                                 .map((product) => {
                                     const cartItem: CartItemType = cart.find((item) => item.id === product.prodId) ?? {
                                         id: product.prodId,
@@ -111,4 +109,4 @@ const CategoryProducts = () => {
     )
 }
 
-export default CategoryProducts
+export default ProductsByBrand

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 
 import { useCart } from '../contexts/CartContext'
 import { FaX } from 'react-icons/fa6';
@@ -12,16 +12,52 @@ import { useLocation } from "../contexts/LocationContext";
 import { formatDeliveryTime } from '../utils/FormatDeliveryTime'
 
 import { useAuth } from "../contexts/AuthContext";
+import axios from 'axios';
+
+
+
+interface CartItemType {
+    id: number;
+    quantity: number;
+}
+
+
+interface ProductType {
+    prodId: number;
+    name: string;
+    brand: string;
+    category: string;
+    subCategory: string;
+    price: number;
+    mrp: number;
+    discount: number;
+    unit: string;
+    type: string;
+    stockQuantity: number;
+    minStock: number;
+    description: string;
+    mainImageUrl: {
+        url: string;
+        public_id: string;
+    };
+    galleryUrls: {
+        url: string;
+        public_id: string;
+    }[];
+    cartItem: CartItemType;
+}
 
 
 const Cart = () => {
 
-    const { cartOpen, setCartOpen, cart, updateQuantity, discountedTotalPrice, originalTotal, savedAmount, DeliveryCharge } = useCart();
+    const { cartOpen, setCartOpen, cart, updateQuantity, DeliveryCharge, discountedTotalPrice, originalTotal, savedAmount } = useCart();
     const { estimatedTime } = useLocation();
 
     const { setLoginBox } = useAuth();
 
     const cartModalRef = useRef<HTMLDivElement | null>(null);
+
+    const [products, setProducts] = useState<ProductType[] | []>([]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -41,12 +77,44 @@ const Cart = () => {
         if (cart.length === 0) setCartOpen(false)
     })
 
+    useEffect(() => {
+        const getProductDetails = async () => {
+            try {
+                const cartItems: CartItemType[] = JSON.parse(localStorage.getItem("cart") || "[]");
+                // console.log("Cart Items:", cartItems);
+
+                // Make individual API requests for each item.id
+                const productPromises = cartItems.map(async (item: CartItemType) => {
+                    const res = await axios.get(`${baseUrl}/products/${item.id}`);
+                    return {
+                        ...res.data.product,
+                        cartItem: {
+                            quantity: item.quantity, // manually attach quantity here
+                        },
+                    };
+                });
+
+                const results = await Promise.all(productPromises);
+                setProducts(results);
+                console.log("Cart Products:", results);
+            } catch (error) {
+                console.log("Error Fetching Product details:", error);
+            }
+        };
+
+        getProductDetails();
+    }, []);
+
+
+
+
+
     return (
         <>
             <div
                 ref={cartModalRef}
                 className={`
-          fixed top-0 right-0 h-screen w-[24rem] bg-white shadow-lg
+          fixed top-0 right-0 h-screen w-[26rem] bg-white shadow-lg
           transform transition-transform duration-300 ease-in-out
           ${cartOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
@@ -83,40 +151,47 @@ const Cart = () => {
                         </div>
 
                         {/* Products List  */}
-                        {cart.map((item) => (
-                            <div key={item.id} className='grid grid-cols-12 items-center mt-3'>
-                                <div className='grid grid-cols-9 space-x-2 py-0 justify-start col-span-9'>
-                                    <div className='col-span-3'>
-                                        <img
-                                            src={item.productImage}
-                                            alt={item.productName}
-                                            className='h-20 w-20 border rounded-xl'
-                                        />
-                                    </div>
-                                    <div className='col-span-6 flex flex-col justify-center h-full items-start space-y-[4px] py-0.5'>
-                                        <p className='leading-[16px] tracking-wide text-xs line-clamp-2 font-poppins'>{item.productName}</p>
-                                        <span className='text-xs font-medium text-gray-500'>{item.unit}</span>
-                                        <div className='flex items-center space-x-1'>
-                                            <span className='text-sm font-semibold'>₹{item.productPrice}</span>
-                                            {item.productMrp &&
-                                                <span className='line-through text-sm font-medium text-gray-400'>₹{item.productMrp}</span>
-                                            }
+                        {products
+                            .filter(product => cart.find(item => item.id === product.prodId))
+                            .map((item) => {
+                                const currentQty = cart.find(c => c.id === item.prodId)?.quantity ?? 1;
+                                return (
+                                    <div key={item.prodId} className='grid grid-cols-12 items-center mt-3'>
+                                        <div className='grid grid-cols-9 space-x-2 py-0 justify-start col-span-9'>
+                                            <div className='col-span-3'>
+                                                <img
+                                                    src={item?.mainImageUrl?.url}
+                                                    alt={item.name}
+                                                    className='h-20 w-20 border rounded-xl'
+                                                />
+                                            </div>
+                                            <div className='col-span-6 flex flex-col justify-center h-full items-start space-y-[2px] py-0.5'>
+                                                <p className='leading-[16px] tracking-wide text-xs line-clamp-2 font-poppins'>{item.name}</p>
+                                                <span className='text-xs font-light text-gray-600'>{item.unit}</span>
+                                                <div className='flex items-center space-x-1'>
+                                                    <span className='text-sm font-medium'>₹{item.price}</span>
+                                                    {item.mrp > item.price &&
+                                                        <span className='line-through text-sm font-light text-gray-500'>₹{item.mrp}</span>
+                                                    }
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                {/* Quantity Increment And Decrement Button */}
-                                <div className='col-span-3 flex items-center justify-center'>
-                                    <div
-                                        className="min-w-16 flex justify-between items-center bg-darkGreen text-white font-medium text-sm py-0 border rounded-md border-[#318616]"
-                                    >
-                                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="px-2 py-[9px]"><FaMinus className="h-2.5 w-2.5 flex-shrink-0" /></button>
-                                        <span>{item?.quantity}</span>
-                                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 py-[9px]"><FaPlus className="h-2.5 w-2.5 flex-shrink-0" /></button>
+                                        {/* Quantity Increment And Decrement Button */}
+
+                                        <div className='col-span-3 flex items-center justify-center'>
+                                            <div
+                                                className="min-w-16 flex justify-between items-center bg-darkGreen text-white font-medium text-sm py-0 border rounded-md border-[#318616]"
+                                            >
+                                                <button onClick={() => updateQuantity(item?.prodId, currentQty - 1)} className="px-2 py-[9px]"><FaMinus className="h-2.5 w-2.5 flex-shrink-0" /></button>
+                                                <span>{currentQty}</span>
+                                                <button onClick={() => updateQuantity(item?.prodId, currentQty + 1)} className="px-2 py-[9px]"><FaPlus className="h-2.5 w-2.5 flex-shrink-0" /></button>
+                                            </div>
+                                        </div>
+
                                     </div>
-                                </div>
-                            </div>
-                        ))}
+                                )
+                            })}
 
                     </div>
 
@@ -135,7 +210,7 @@ const Cart = () => {
                                         }
                                     </span>
                                     <div className='flex items-center'>
-                                        {originalTotal &&
+                                        {originalTotal > discountedTotalPrice &&
                                             <span className='mr-1 line-through text-gray-500 text-sm'>₹{originalTotal}</span>
                                         }
                                         <span className='text-sm'>₹{discountedTotalPrice}</span>

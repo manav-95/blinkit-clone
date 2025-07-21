@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard"
 import Products from "./pages/admin/Products"
 import Orders from "./pages/admin/Orders"
 import ProductDetailsModal from "./components/admin/ProductDetailsModal"
+import ProductsByBrand from "./pages/ProductsByBrand"
 
 function App() {
 
@@ -28,6 +29,7 @@ function App() {
           <Route path="pn/:productName/pid/:productId" element={<ProductDetails />} />
           <Route path="cn/:categoryName" element={<CategoryProducts />} />
           <Route path="cn/:categoryName/:subCategoryName" element={<ProductsByCategory />} />
+          <Route path="br/:brandName" element={<ProductsByBrand />} />
         </Route>
 
 
@@ -40,7 +42,7 @@ function App() {
           <Route path="orders" element={<Orders />} />
         </Route>
 
-        <Route path="/product-details" element={<ProductDetailsModal productId="783728"/>} />
+        <Route path="/product-details" element={<ProductDetailsModal productId="783728" />} />
 
       </Routes>
     </>

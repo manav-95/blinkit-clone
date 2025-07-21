@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Swiper, SwiperSlide, } from 'swiper/react';
@@ -10,11 +10,43 @@ import { useCart } from "../contexts/CartContext";
 
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
-import { products } from "../data/productData";
+// import { products } from "../data/productData";
 import ProductCard from "./ProductCard";
+import axios from "axios";
 
-import { type CartItemType } from "../types/CartItemType";
+// import { type CartItemType } from "../types/CartItemType";
 
+
+interface CartItemType {
+    id: number;
+    quantity: number;
+}
+
+
+interface ProductType {
+    prodId: number;
+    name: string;
+    brand: string;
+    category: string;
+    subCategory: string;
+    price: number;
+    mrp: number;
+    discount: number;
+    unit: string;
+    type: string;
+    stockQuantity: number;
+    minStock: number;
+    description: string;
+    mainImageUrl: {
+        url: string;
+        public_id: string;
+    };
+    galleryUrls: {
+        url: string;
+        public_id: string;
+    }[];
+    cartItem: CartItemType;
+}
 
 interface ProductCarouselProps {
     title: string;
@@ -31,6 +63,8 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, category }) =>
 
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
+    const [products, setProducts] = useState<ProductType[] | []>([])
+
 
     const slidesPerGroup = 6;
     const slidesPerView = 6;
@@ -39,6 +73,23 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, category }) =>
 
     const isAtStart = activeIndex === 0;
     const isAtEnd = activeIndex + slidesPerView >= totalSlides;
+
+    const getProducts = async () => {
+        try {
+            const res = await axios.get(`${baseUrl}/products`)
+            if (res) {
+                setProducts(res.data)
+                console.log(typeof products)
+            }
+        } catch (error) {
+            console.log("Error Fecthing Products: ", error)
+        }
+    }
+
+
+    useEffect(() => {
+        getProducts();
+    }, [])
 
 
     return (
@@ -110,29 +161,30 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, category }) =>
                     >
                         {products
                             .filter((product) => product.category === category)
+                            .sort((a, b) => Number(a.prodId) - Number(b.prodId))
                             .map((product) => {
-                                const cartItem: CartItemType = cart.find((item) => item.id === product.id) ?? {
-                                    id: product.id,
-                                    productName: product.productName ?? "",
-                                    productPrice: product.discountPrice ?? 0,
-                                    productMrp: product?.mrp,
-                                    productImage: product.productImage ?? "",
-                                    unit: product.unit ?? "",
-                                    quantity: 0,
+                                const cartItem: CartItemType = cart.find((item) => item.id === product.prodId) ?? {
+                                    id: product.prodId,
+                                    // productName: product.productName ?? "",
+                                    // productPrice: product.discountPrice ?? 0,
+                                    // productMrp: product?.mrp,
+                                    // productImage: product.productImage ?? "",
+                                    // unit: product.unit ?? "",
+                                     quantity: 0,
                                 };
                                 return (
                                     <SwiperSlide
-                                        key={product.id}
+                                        key={product.prodId}
                                         className="my-4"
                                     >
                                         <ProductCard
-                                            id={product.id}
-                                            image={product.productImage}
-                                            name={product.productName}
+                                            prodId={product.prodId}
+                                            mainImageUrl={product.mainImageUrl}
+                                            name={product.name}
                                             mrp={product.mrp}
-                                            discountPrice={product.discountPrice}
+                                            price={product.price}
+                                            discount={product.discount}
                                             unit={product.unit}
-                                            quantity={cartItem.quantity}
                                             cartItem={cartItem}
                                         />
                                     </SwiperSlide>

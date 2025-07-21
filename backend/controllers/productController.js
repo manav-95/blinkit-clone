@@ -1,5 +1,5 @@
 import Product from "../models/Product.js";
-import { addProductService, deleteProductService, getAllProductService, getProductService, searchProductService, updateProductService } from "../services/productService.js";
+import { addProductService, deleteProductService, getAllProductService, getProductsByBrandService, getProductService, searchProductService, updateProductService } from "../services/productService.js";
 
 
 
@@ -100,6 +100,27 @@ export const getSearchedProducts = async (req, res) => {
         return res.status(200).json({ success: true, message: "Product Searched Successfully", products })
     } catch (error) {
         console.error("Error searching product", error)
+        return res.status(500).json({ message: "Server Error" });
+    }
+}
+
+export const getProductByCategory = async (req, res) => {
+    try {
+        const category = req.params.category;
+        const product = await getProductByCategory(category);
+        return res.status(200).json({ success: true, message: "Products Fetched Successfully By Category", product })
+    } catch (error) {
+        console.error("Error getting product by category", error)
+        return res.status(500).json({ message: "Server Error" });
+    }
+}
+export const getProductByBrand = async (req, res) => {
+    try {
+        const brand = req.params.brand;
+        const product = await getProductsByBrandService(brand);
+        return res.status(200).json({ success: true, message: "Products Fetched Successfully By Brand", product })
+    } catch (error) {
+        console.error("Error getting product by brand", error)
         return res.status(500).json({ message: "Server Error" });
     }
 }

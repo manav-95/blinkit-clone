@@ -1,8 +1,39 @@
+import axios from "axios";
 import React, { createContext, useContext, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 
-import { type CartItemType } from "../types/CartItemType";
+// import { type CartItemType } from "../types/CartItemType";
 
+interface CartItemType {
+    id: number;
+    quantity: number;
+}
+
+
+interface ProductType {
+    prodId: number;
+    name: string;
+    brand: string;
+    category: string;
+    subCategory: string;
+    price: number;
+    mrp: number;
+    discount: number;
+    unit: string;
+    type: string;
+    stockQuantity: number;
+    minStock: number;
+    description: string;
+    mainImageUrl: {
+        url: string;
+        public_id: string;
+    };
+    galleryUrls: {
+        url: string;
+        public_id: string;
+    }[];
+    cartItem: CartItemType;
+}
 
 interface CartContextType {
     cart: CartItemType[];
@@ -28,25 +59,70 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [cartOpen, setCartOpen] = useState<boolean>(false)
 
-    const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const discountedTotalPrice = cart.reduce((sum, item) => sum + item.productPrice * item.quantity, 0);
-
-    const hasMrp = cart.some(item => item.productMrp && item.productMrp > item.productPrice)
-
-    const originalTotal = hasMrp
-        ? cart.reduce((sum, item) => {
-            const basePrice = item.productMrp ?? item.productPrice;
-            return sum + basePrice * item.quantity;
-        }, 0)
-        : null;
-
-    const savedAmount = originalTotal - discountedTotalPrice;
-    const DeliveryCharge = 25;
+    const [products, setProducts] = useState<ProductType[] | []>([])
 
 
     useEffect(() => {
         localStorage.setItem("cart", JSON.stringify(cart));
     }, [cart])
+
+    useEffect(() => {
+        const getProductDetails = async () => {
+            try {
+                const cartItems: CartItemType[] = JSON.parse(localStorage.getItem("cart") || "[]");
+                // console.log("Cart Items:", cartItems);
+
+                // Make individual API requests for each item.id
+                const productPromises = cartItems.map(async (item: CartItemType) => {
+                    const res = await axios.get(`${baseUrl}/products/${item.id}`);
+                    return {
+                        ...res.data.product,
+                        cartItem: {
+                            quantity: item.quantity,
+                        },
+                    };
+                });
+
+                const results = await Promise.all(productPromises);
+                setProducts(results);
+            } catch (error) {
+                console.log("Error Fetching Product details:", error);
+            }
+        };
+
+        getProductDetails();
+    }, [cart]);
+
+
+
+    const getProductById = (id: number) => products.find(p => p.prodId === id);
+
+    // Calculate discounted total
+    const discountedTotalPrice = cart.reduce((sum, item) => {
+        const product = getProductById(item.id);
+        if (!product) return sum;
+        return sum + product.price * item.quantity;
+    }, 0);
+
+    // Calculate original total
+    const originalTotal = cart.reduce((sum, item) => {
+        const product = getProductById(item.id);
+        if (!product) return sum;
+        const price = product.mrp ?? product.price;
+        return sum + price * item.quantity;
+    }, 0);
+
+    // Saved amount
+    const savedAmount = originalTotal - discountedTotalPrice;
+
+
+    const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    const hasMrp = cart.some(item => item.productMrp && item.productMrp > item.productPrice)
+
+
+    const DeliveryCharge = 25;
+
 
     const addToCart = (item: CartItemType) => {
         setCart((prev) => [...prev, { ...item, quantity: 1 }]);

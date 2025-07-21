@@ -1,5 +1,5 @@
 import express from 'express'
-import { addProduct, deleteProduct, getAllProducts, getProduct, getSearchedProducts, updateProduct } from '../controllers/productController.js';
+import { addProduct, deleteProduct, getAllProducts, getProduct, getProductByBrand, getProductByCategory, getSearchedProducts, updateProduct } from '../controllers/productController.js';
 import multer from 'multer';
 
 const upload = multer();
@@ -22,5 +22,9 @@ router.get('/:id', getProduct);
 router.delete('/:id', deleteProduct);
 
 router.get('/search/:term', getSearchedProducts);
+
+router.get('/:category', getProductByCategory);
+
+router.get('/brand/:brand', getProductByBrand);
 
 export default router;

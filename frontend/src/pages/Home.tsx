@@ -60,8 +60,8 @@ const Home = () => {
           ))}
         </div>
 
-        <ProductCarousel category={"dairy breakfast"} title={"Dairy, Bread & Eggs"} />
-        <ProductCarousel category={"candies & gums"} title={"Candies & Gums"} />
+        <ProductCarousel category={"dairy & breakfast"} title={"Dairy, Bread & Eggs"} />
+        {/* <ProductCarousel category={"candies & gums"} title={"Candies & Gums"} /> */}
 
       </div>
     </>
