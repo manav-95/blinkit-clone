@@ -80,7 +80,8 @@ const ProductCard = ({ prodId, mainImageUrl, name, unit, mrp, price, discount, c
                 <div className="p-2 w-full flex justify-center items-center">
                     <img
                         src={mainImageUrl.url || "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none/da/cms-assets/cms/product/8622bfed-5e2d-415d-8a85-99c5fb7bac04.jpg?ts=1737543569"}
-                        className="h-32 w-full object-cover" />
+                        className="h-32 w-full object-cover"
+                    />
                 </div>
                 <div className="p-3 flex flex-col justify-between flex-1 text-left">
                     <div className="flex items-center space-x-1 bg-[#f8f8f8] rounded w-fit px-1 py-0.5">

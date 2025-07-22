@@ -23,7 +23,7 @@ router.delete('/:id', deleteProduct);
 
 router.get('/search/:term', getSearchedProducts);
 
-router.get('/:category', getProductByCategory);
+router.get('/category/:category', getProductByCategory);
 
 router.get('/subCategory/:subCategory', getProductBySubCategory);
 

@@ -59,7 +59,9 @@ export const superstoreCategories = [
       "pringles",
       "haldiram’s",
       "unibic",
-      "sunfeast"
+      "sunfeast",
+      "kettle studio",
+      "doritos",
     ],
     subCategories: [
       "chips & crisps",

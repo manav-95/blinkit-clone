@@ -878,7 +878,7 @@ const Products = () => {
         <div className="grid grid-cols-1 gap-4 px-6 py-4">
           {[...Array(6)].map((_, i) => (
             <>
-              <div key={i} className={`animate-pulse bg-gradient-to-r from-slate-100 to-slate-200 rounded-md ${i === 0 ? 'h-12' : 'h-20'} w-full shadow`}></div>
+              <div key={i} className={`bg-[linear-gradient(110deg,#f8f8f8,45%,#f1f1f1,55%,#f8f8f8)] bg-[length:200%_100%] animate-shine rounded-md ${i === 0 ? 'h-12' : 'h-20'} w-full shadow`}></div>
             </>
           ))}
         </div>

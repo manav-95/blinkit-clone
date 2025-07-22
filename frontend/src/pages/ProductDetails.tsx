@@ -60,23 +60,7 @@ const ProductDetails = () => {
 
     const navigate = useNavigate();
 
-    const rawProduct = products.find((product) => product.id === Number(productId))
-
     const cartItem: CartItemType = cart.find((item) => item.id === Number(productId))
-
-    // const product: CartItemType | undefined = rawProduct
-    //     ? {
-    //         id: rawProduct.id,
-    //         productName: rawProduct.productName,
-    //         productImage: rawProduct.productImage,
-    //         productPrice: rawProduct.discountPrice,
-    //         productMrp: rawProduct.mrp,
-    //         unit: rawProduct.unit,
-    //         quantity: rawProduct.quantity,
-    //         category: rawProduct.category,
-    //         subCategory: rawProduct.subCategory,
-    //     }
-    //     : undefined;
 
     const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
     const [showZoom, setShowZoom] = useState<boolean>(false);
@@ -256,7 +240,7 @@ const ProductDetails = () => {
                             {swiperImages.length >= 7 &&
                                 <button
                                     onClick={() => swiperRef?.current?.slidePrev()}
-                                    className='p-2.5 bg-white shadow-md hover:bg-gray-50 active:bg-white rounded-full border'
+                                    className={`p-2.5 bg-white shadow-md hover:bg-gray-50 active:bg-white rounded-full border`}
                                 >
                                     <FaChevronLeft />
                                 </button>

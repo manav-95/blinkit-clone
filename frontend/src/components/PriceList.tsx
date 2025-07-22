@@ -29,6 +29,8 @@ const PriceList = ({ brandName, subCategoryName, categoryName }: PriceListProps)
                     url = `${baseUrl}/products/brand/${brandName}`;
                 } else if (subCategoryName) {
                     url = `${baseUrl}/products/subCategory/${subCategoryName}`;
+                } else {
+                    url = `${baseUrl}/products/category/${categoryName}`;
                 }
 
                 if (url) {

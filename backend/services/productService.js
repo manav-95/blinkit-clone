@@ -210,7 +210,7 @@ export const searchProductService = async (query) => {
 
 
 export const getProductsByCategoryService = async (category) => {
-    const products = await Product.find({ category });
+    const products = await Product.find({ category: category });
     return products;
 }
 export const getProductsByBrandService = async (brand) => {

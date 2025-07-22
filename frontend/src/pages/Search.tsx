@@ -306,9 +306,17 @@ const Search = () => {
             )}
           </>
         ) : (
-          <p className="text-center text-gray-500 mt-8 font-medium">
-            No products found.
-          </p>
+          <>
+            <div className="h-[60vh] w-full flex flex-col justify-center items-center">
+              <img
+                src="/not-found.webp"
+                alt="not found image"
+                className="h-96 w-96"
+              />
+              <p className="bg-darkGreen text-white px-6 py-2 rounded font-poppins">
+                Oops! We couldn't find any products matching your search.              </p>
+            </div>
+          </>
         )
       ) :
         recentSearches.length > 0 ? (

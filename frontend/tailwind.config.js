@@ -31,7 +31,7 @@ export default {
         darkGreen: "#318616",
       },
        animation: {
-        shine: 'shine 2s linear infinite',
+        shine: 'shine 1.5s linear infinite',
       },
       keyframes: {
         shine: {

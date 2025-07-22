@@ -56,9 +56,9 @@ const CategoryProducts = () => {
     useEffect(() => {
         const getProducts = async () => {
             try {
-                const res = await axios.get(`${baseUrl}/products?category=${decodedCategoryName}`)
+                const res = await axios.get(`${baseUrl}/products/category/${decodedCategoryName}`)
                 if (res) {
-                    setProducts(res.data)
+                    setProducts(res.data.product)
                    // console.log(res.data)
                 } else {
                     setProducts([])
