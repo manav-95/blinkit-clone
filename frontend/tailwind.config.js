@@ -29,7 +29,16 @@ export default {
       },
       borderColor: {
         darkGreen: "#318616",
-      }
+      },
+       animation: {
+        shine: 'shine 2s linear infinite',
+      },
+      keyframes: {
+        shine: {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+      },
     },
   },
   plugins: [

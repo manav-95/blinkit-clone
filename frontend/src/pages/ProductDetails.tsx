@@ -347,7 +347,7 @@ const ProductDetails = () => {
                         <div className='flex justify-start items-center space-x-1 font-poppins text-xs text-gray-800 font-medium'>
                             <button onClick={() => navigate('/')} className='hover:text-darkGreen transition-colors py-1'>Home</button>
                             <span>/</span>
-                            <button onClick={() => navigate(`/cn/${product.category}`)} className='hover:text-darkGreen transition-colors py-1'>{product?.category}</button>
+                            <button onClick={() => navigate(`/cn/${product.category}/${product.subCategory}`)} className='hover:text-darkGreen transition-colors py-1'>{product?.subCategory}</button>
                             <span>/</span>
                             <span className='text-gray-500 py-1'>{product.name}</span>
                         </div>

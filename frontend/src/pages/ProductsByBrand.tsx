@@ -7,6 +7,7 @@ import ProductCard from '../components/ProductCard';
 import { useCart } from '../contexts/CartContext';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import PriceList from '../components/PriceList';
 
 
 
@@ -69,11 +70,12 @@ const ProductsByBrand = () => {
         getProducts()
     }, [brandName])
 
+const subCategoryName = products[0]?.subCategory;
 
     return (
         <>
-            <div className='max-w-7xl mx-auto px-4'>
-                <div className='flex flex-col items-start justify-start p-1 bg-gray-100 rounded-b-xl'>
+            <div className='max-w-7xl mx-auto px-4 pb-4'>
+                <div className='flex flex-col items-start justify-start p-1 bg-gray-100'>
                     <div className='flex justify-start items-center h-10 bg-white shadow border-b border-gray-300 rounded-sm w-full px-2'>
                         <span className='capitalize font-poppins font-semibold text-sm'>Buy {brandName} online</span>
                     </div>
@@ -104,6 +106,9 @@ const ProductsByBrand = () => {
                         </div>
                     </div>
                 </div>
+
+                <PriceList brandName={decodedBrandName} subCategoryName={subCategoryName}/>
+
             </div>
         </>
     )

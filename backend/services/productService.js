@@ -217,3 +217,7 @@ export const getProductsByBrandService = async (brand) => {
     const products = await Product.find({ brand: brand });
     return products;
 }
+export const getProductsBySubCategoryService = async (subCategory) => {
+    const products = await Product.find({ subCategory: subCategory });
+    return products;
+}

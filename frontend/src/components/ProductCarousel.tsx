@@ -80,6 +80,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, category }) =>
             if (res) {
                 setProducts(res.data)
                 console.log(typeof products)
+
             }
         } catch (error) {
             console.log("Error Fecthing Products: ", error)
@@ -90,6 +91,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, category }) =>
     useEffect(() => {
         getProducts();
     }, [])
+
 
 
     return (
@@ -165,12 +167,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, category }) =>
                             .map((product) => {
                                 const cartItem: CartItemType = cart.find((item) => item.id === product.prodId) ?? {
                                     id: product.prodId,
-                                    // productName: product.productName ?? "",
-                                    // productPrice: product.discountPrice ?? 0,
-                                    // productMrp: product?.mrp,
-                                    // productImage: product.productImage ?? "",
-                                    // unit: product.unit ?? "",
-                                     quantity: 0,
+                                    quantity: 0,
                                 };
                                 return (
                                     <SwiperSlide

@@ -1,5 +1,5 @@
 import Product from "../models/Product.js";
-import { addProductService, deleteProductService, getAllProductService, getProductsByBrandService, getProductService, searchProductService, updateProductService } from "../services/productService.js";
+import { addProductService, deleteProductService, getAllProductService, getProductsByBrandService, getProductsByCategoryService, getProductsBySubCategoryService, getProductService, searchProductService, updateProductService } from "../services/productService.js";
 
 
 
@@ -107,7 +107,7 @@ export const getSearchedProducts = async (req, res) => {
 export const getProductByCategory = async (req, res) => {
     try {
         const category = req.params.category;
-        const product = await getProductByCategory(category);
+        const product = await getProductsByCategoryService(category);
         return res.status(200).json({ success: true, message: "Products Fetched Successfully By Category", product })
     } catch (error) {
         console.error("Error getting product by category", error)
@@ -121,6 +121,17 @@ export const getProductByBrand = async (req, res) => {
         return res.status(200).json({ success: true, message: "Products Fetched Successfully By Brand", product })
     } catch (error) {
         console.error("Error getting product by brand", error)
+        return res.status(500).json({ message: "Server Error" });
+    }
+}
+
+export const getProductBySubCategory = async (req, res) => {
+    try {
+        const subCategory = req.params.subCategory;
+        const product = await getProductsBySubCategoryService(subCategory);
+        return res.status(200).json({ success: true, message: "Products Fetched Successfully By SubCategory", product })
+    } catch (error) {
+        console.error("Error getting product by subCategory", error)
         return res.status(500).json({ message: "Server Error" });
     }
 }

@@ -7,6 +7,7 @@ import ProductCard from '../components/ProductCard';
 import { useCart } from '../contexts/CartContext';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import PriceList from '../components/PriceList';
 
 
 
@@ -105,6 +106,7 @@ const CategoryProducts = () => {
                             }
                         </div>
                     </div>
+                    <PriceList categoryName={categoryName}/>
                 </div>
             </div>
         </>

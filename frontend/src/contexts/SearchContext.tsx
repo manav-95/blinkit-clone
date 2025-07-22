@@ -2,8 +2,8 @@ import React, {
   createContext,
   useContext,
   useState,
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useEffect,
 } from "react";
 import { useSearchParams } from "react-router-dom";
