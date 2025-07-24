@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { FaCaretDown } from "react-icons/fa";
+import { FaCaretDown, FaChevronDown } from "react-icons/fa";
 import { FaCartShopping, FaIndianRupeeSign, FaX } from "react-icons/fa6";
-import { LuSearch } from "react-icons/lu";
+import { LuChevronDown, LuChevronsDown, LuSearch } from "react-icons/lu";
 
 import { useLocation as useLocationContext } from "../contexts/LocationContext";
 import { formatDeliveryTime } from '../utils/FormatDeliveryTime'
@@ -14,11 +14,13 @@ import { useAuth } from "../contexts/AuthContext";
 
 import { useSearch } from "../contexts/SearchContext";
 
+import { navLinks } from '../data/navLinks'
+
 const Navbar = () => {
 
   const { setOpenLocationBox, estimatedTime } = useLocationContext();
   const { totalCartItems, discountedTotalPrice, setCartOpen } = useCart();
-  const { setLoginBox } = useAuth();
+  const { setLoginBox, loggedIn } = useAuth();
 
   const [displaySearch, setDisplaySearch] = useState(false)
 
@@ -29,6 +31,8 @@ const Navbar = () => {
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [slide, setSlide] = useState<boolean>(true);
+
+  const [navMenuOpen, setNavMenuOpen] = useState(false)
 
   const texts = [`Search "butter"`, `Search "Milk"`, `Search "chips"`];
 
@@ -60,7 +64,7 @@ const Navbar = () => {
 
 
   return (
-    <div className="min-w-full flex justify-between bg-white border-b min-h-[5.3rem] mb-0 fixed top-0 z-40">
+    <div className={`min-w-full flex ${displaySearch ? 'justify-start' : 'justify-between'} bg-white border-b min-h-[5.3rem] mb-0 fixed top-0 z-40`}>
       {/* Logo and Location */}
       <div className="flex">
         <button
@@ -88,7 +92,8 @@ const Navbar = () => {
       {displaySearch
         ? (
           <>
-            <div className="flex items-center w-full px-8">
+            <div className={`flex items-center w-full ${loggedIn ? 'pl-8' : 'px-8'}`}>
+
               <div
                 style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.1)' }}
                 className="relative flex justify-between items-center border border-gray-300 bg-white w-full min-h-11 rounded-lg">
@@ -128,14 +133,42 @@ const Navbar = () => {
           </>
         )}
       {/* Cart and User */}
-      <div className={`${displaySearch ? 'lg:min-w-[9.5rem]' : 'lg:min-w-[16.5rem] xl:min-w-80'} flex items-center`}>
-        <button
-          onClick={() => setLoginBox(true)}
-          className={`${displaySearch ? 'hidden' : 'visible'} lg:px-10 xl:px-14 text-lg h-full text-darkGreen hover:bg-gray-50`}
-        >
-          Login
-        </button>
-        <div className="px-0">
+      <div className={`${displaySearch ? '' : 'min-w-[20rem]'} flex items-center`}>
+        {loggedIn ? (
+          <>
+            <button
+              onClick={() => setNavMenuOpen(!navMenuOpen)}
+              className={`${loggedIn ? 'visible' : 'hidden'} flex items-center justify-center lg:px-4 xl:px-4 text-base min-w-[11rem] h-full text-black font-semibold font-poppins hover:bg-gray-50`}
+            >
+              <span>Account</span>
+              <FaCaretDown className={` ${navMenuOpen ? 'rotate-180' : 'rotate-0'} transition-all h-5 w-5 ml-2`} />
+            </button>
+
+            {navMenuOpen &&
+              <div onClick={() => setNavMenuOpen(false)} className="fixed top-[5.2rem] left-0 bg-black/40 h-screen w-full">
+                <div onClick={(e) => e.stopPropagation()} className="absolute top-0 right-44 min-w-72 px-0 py-2 rounded-b-xl z-10 bg-white">
+                  <ul>
+                    <h1 className="mb-2 font-poppins text-lg font-medium text-gray-600 px-4">My Account</h1>
+                    {navLinks.map((Link, index) =>
+                      <li
+                        key={index}
+                        className="py-1.5 hover:bg-gray-100 text-gray-800 px-4 font-poppins text-sm capitalize"
+                      >{Link.name}</li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            }
+          </>
+        ) : (
+          <button
+            onClick={() => setLoginBox(true)}
+            className={`${displaySearch ? 'hidden' : 'visible'} lg:px-10 xl:px-14 min-w-[180px] text-lg h-full text-darkGreen hover:bg-gray-50`}
+          >
+            Login
+          </button>
+        )}
+        <div className={`min-w-[9rem]`}>
           {totalCartItems > 0 ?
             (<>
               <button

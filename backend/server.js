@@ -2,19 +2,27 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose';
-
-import fileUpload from 'express-fileupload';
-import formidable from 'express-formidable';
+import cookieParser from 'cookie-parser';
 
 import cloudinaryRoute from './routes/cloudinaryRoute.js'
 import productRoute from './routes/productRoute.js'
+import userRoute from './routes/userRoute.js'
+import { verifyAccessToken } from './middlewares/authMiddleware.js';
 
 dotenv.config();
 
 const app = express();
 
-app.use(express.json())
-app.use(cors())
+app.use(express.json());
+app.use(cookieParser());
+app.use(cors({
+    origin: 'http://localhost:5173',
+     credentials: true,
+}));
+
+app.get('/protected', verifyAccessToken, (req, res) => {
+    res.json({ success: true, message: `Welcome, user ${req.user.phone}` });
+});
 
 
 const connectDB = async () => {
@@ -46,6 +54,7 @@ app.post('/api/admin/login', (req, res) => {
 
 app.use('/api/cloudinary', cloudinaryRoute);
 app.use('/api/products', productRoute);
+app.use('/api/users', userRoute);
 
 const PORT = process.env.PORT || 5000;
 

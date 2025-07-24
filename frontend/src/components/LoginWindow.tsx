@@ -1,15 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import { IoWarningOutline } from "react-icons/io5";
+import { IoCheckmark, IoWarningOutline } from "react-icons/io5";
+import axios from "axios";
 
 const LoginWindow = () => {
     const modalRef = useRef<HTMLDivElement | null>(null);
-    const { setLoginBox } = useAuth();
+    const { setLoginBox, setLoggedIn } = useAuth();
 
     const [buttonActive, setButtonActive] = useState<boolean>(false)
     const [otpWindowOpen, setOtpWidowOpen] = useState<boolean>(false)
     const [input, setInput] = useState<string>("")
+    const [otp, setOtp] = useState<string>("")
+    const [message, setMessage] = useState<string>("")
+    const [isError, setIsError] = useState<boolean | null>(null);
+
+    const formattedNumber = '+91' + input;
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -31,6 +37,86 @@ const LoginWindow = () => {
             setButtonActive(false)
         }
     }, [input])
+
+
+    const generateOTP = async () => {
+        try {
+            const res = await axios.post(
+                `${baseUrl}/users/send-otp`,
+                { phone: formattedNumber },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+
+                }
+            );
+
+            if (res?.status === 201) {
+                alert('OTP sent Successfully');
+            }
+        } catch (error) {
+            console.error("Error sending OTP: ", error);
+            alert('Failed to send OTP');
+        }
+    };
+
+
+    useEffect(() => {
+
+        if (otp.length === 6) {
+            const verifyAndLogin = async () => {
+                try {
+                    const res = await axios.post(
+                        `${baseUrl}/users/login`,
+                        { phone: formattedNumber, otp: otp },
+                        {
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            withCredentials: true,
+                        }
+                    );
+
+
+                    if (res.status === 201) {
+                        setIsError(false)
+                        setMessage('Verification Successful')
+                        localStorage.setItem('accessToken', res.data.user.accessToken)
+                        alert(res.data.message)
+                        setLoggedIn(true)
+                        setOtpWidowOpen(false)
+                        setLoginBox(false)
+                        // setOtp("")
+
+                        // console.log("Login Successful: ", res.data)
+                    } else {
+                        setIsError(true);
+                        setMessage("Verification Failed");
+                        alert("OTP Verification Failed")
+                        setLoggedIn(false);
+                        setOtp("")
+                    }
+
+                } catch (error) {
+                    setIsError(true)
+                    setMessage('Verification Failed')
+                    alert("OTP Verification Failed")
+                    console.log("Error Verifying OTP: ", error)
+                    setLoggedIn(false)
+                    setOtp("");
+                }
+            }
+
+            verifyAndLogin();
+        } else if (otp.length > 0) {
+            setIsError(null)
+        }
+    }, [otp])
+
+
+
+
 
     return (
         <>
@@ -54,6 +140,8 @@ const LoginWindow = () => {
                                         <input
                                             type="tel"
                                             maxLength={6}
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value)}
                                             autoFocus={true}
                                             className="w-full text-center font-poppins tracking-wide font-medium border border-red-500 rounded-lg outline-none px-4 py-2"
                                         />
@@ -62,10 +150,24 @@ const LoginWindow = () => {
                                         <span className="font-poppins text-darkGreen text-sm">Resend Code</span>
                                     </div>
                                 </div>
-                                <div className="flex justify-center items-center space-x-1 bg-red-50 text-red-500 w-full py-4 rounded-b-2xl">
-                                    <IoWarningOutline className="h-3.5 w-3.5 flex-shrink-0"/>
-                                    <span className="text-xs font-poppins">Verification Failed</span>
-                                </div>
+
+                                {isError !== null && (
+                                    <div className={`${isError ? 'bg-red-50 text-red-500' : 'bg-green-50 text-darkGreen'} flex justify-center items-center space-x-1 w-full py-4 rounded-b-2xl`}>
+                                        {isError ? (
+                                            <>
+                                                <IoWarningOutline className="h-3.5 w-3.5 flex-shrink-0" />
+                                                <span className="text-xs font-poppins">{message}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <IoCheckmark className="h-3.5 w-3.5 flex-shrink-0" />
+                                                <span className="text-xs font-poppins">{message}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+
                             </div>
                         </>
                     ) : (
@@ -93,6 +195,7 @@ const LoginWindow = () => {
                                             onKeyDown={(event) => {
                                                 if (input.length == 10 && event.key === "Enter") {
                                                     setOtpWidowOpen(true)
+                                                    generateOTP();
                                                 }
                                             }}
                                             placeholder="Enter Your Number"
@@ -102,7 +205,7 @@ const LoginWindow = () => {
                                     <div className="w-full">
                                         <button
                                             disabled={!buttonActive}
-                                            onClick={() => setOtpWidowOpen(true)}
+                                            onClick={() => { setOtpWidowOpen(true); generateOTP() }}
                                             className={`${buttonActive ? 'bg-darkGreen' : 'bg-stone-400'} w-full cursor-pointer text-white font-poppins py-3 rounded-[0.60rem]`}
                                         >
                                             Continue

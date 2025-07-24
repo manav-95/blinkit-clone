@@ -14,6 +14,10 @@ import Products from "./pages/admin/Products"
 import Orders from "./pages/admin/Orders"
 import ProductDetailsModal from "./components/admin/ProductDetailsModal"
 import ProductsByBrand from "./pages/ProductsByBrand"
+import AccountLayout from "./layouts/AccountLayout"
+import Addresses from "./pages/Addresses"
+import MyOrders from "./pages/MyOrders"
+import FAQ from "./pages/FAQ"
 
 function App() {
 
@@ -30,6 +34,12 @@ function App() {
           <Route path="cn/:categoryName" element={<CategoryProducts />} />
           <Route path="cn/:categoryName/:subCategoryName" element={<ProductsByCategory />} />
           <Route path="br/:brandName" element={<ProductsByBrand />} />
+
+          <Route path="/account" element={<AccountLayout />}>
+            <Route path="addresses" element={<Addresses />} />
+            <Route path="my-orders" element={<MyOrders />} />
+            <Route path="faq" element={<FAQ />} />
+          </Route>
         </Route>
 
 
