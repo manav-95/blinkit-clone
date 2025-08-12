@@ -44,7 +44,7 @@ interface CartContextType {
     updateQuantity: (id: number, newQuantity: number) => void;
     totalCartItems: number;
     discountedTotalPrice: number;
-    originalTotal?: number | null;
+    originalTotal: number;
     savedAmount: number;
     DeliveryCharge: number;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link, NavLink } from "react-router-dom";
 
 import { FaCaretDown, FaChevronDown } from "react-icons/fa";
 import { FaCartShopping, FaIndianRupeeSign, FaX } from "react-icons/fa6";
@@ -147,15 +147,26 @@ const Navbar = () => {
             {navMenuOpen &&
               <div onClick={() => setNavMenuOpen(false)} className="fixed top-[5.2rem] left-0 bg-black/40 h-screen w-full">
                 <div onClick={(e) => e.stopPropagation()} className="absolute top-0 right-44 min-w-72 px-0 py-2 rounded-b-xl z-10 bg-white">
-                  <ul>
+                  <div className="flex flex-col">
                     <h1 className="mb-2 font-poppins text-lg font-medium text-gray-600 px-4">My Account</h1>
-                    {navLinks.map((Link, index) =>
-                      <li
-                        key={index}
-                        className="py-1.5 hover:bg-gray-100 text-gray-800 px-4 font-poppins text-sm capitalize"
-                      >{Link.name}</li>
+                    {navLinks.map((link, index) => {
+                      return (
+                        <NavLink
+                          to={`/account/${link.path}`}
+                          key={index}
+                          onClick={() => setNavMenuOpen(false)}
+                          className={({ isActive }) =>
+                            isActive
+                              ? 'py-1.5 bg-gray-100 text-gray-800 px-4 font-poppins text-sm capitalize'
+                              : 'py-1.5 hover:bg-gray-100 text-gray-800 px-4 font-poppins text-sm capitalize'
+                          }
+                        >
+                          {link.name}
+                        </NavLink>
+                      )
+                    }
                     )}
-                  </ul>
+                  </div>
                 </div>
               </div>
             }

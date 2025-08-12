@@ -1,4 +1,4 @@
-import { loginWithPhoneService, sendOtpService } from "../services/userService.js";
+import { addAddressService, getUserAddressesService, loginWithPhoneService, sendOtpService } from "../services/userService.js";
 import { createAccessToken } from "../utils/token.js";
 import User from '../models/User.js'
 import jwt from 'jsonwebtoken'
@@ -85,3 +85,34 @@ export const logout = async (req, res) => {
 
     return res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
+
+
+export const addAddress = async (req, res) => {
+    try {
+        const addressData = req.body;
+        if (!addressData) {
+            return res.status(400).json({ success: false, message: "Address is required" });
+        }
+        const savedAddress = await addAddressService(addressData);
+        return res.status(201).json({ success: true, message: 'Address Added Successfully', savedAddress })
+    } catch (error) {
+        return res.status(400).json({ success: false, message: 'Error Adding Address' });
+    }
+
+}
+
+export const getUserAddresses = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "userId is Required" })
+        }
+
+        const addresses = await getUserAddressesService(userId);
+        return res.status(200).json({ success: true, message: "User Addresses Found Successfully", addresses: addresses })
+    } catch (error) {
+        console.log("Error Fetching User Addresses: ", error.message)
+        return res.status(400).json({ success: false, message: "Error Fetching User Addresses" })
+    }
+}

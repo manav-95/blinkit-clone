@@ -61,10 +61,10 @@ const ProductCard = ({ prodId, mainImageUrl, name, unit, mrp, price, discount, c
                             <p className="text-[10px] font-semibold font-poppins">{discount}%</p>
                             <p className="text-[9px] font-bold">OFF</p>
                             <svg
-                                className="absolute bottom-0 left-0 w-8"
+                                className="absolute -bottom-0.5 left-0 w-8"
                                 viewBox="0 0 100 10"
                                 preserveAspectRatio="none"
-                                height="4"
+                                height="5"
                             >
                                 {/* 4 upward triangles, each 25 units wide */}
                                 <polygon
@@ -88,7 +88,7 @@ const ProductCard = ({ prodId, mainImageUrl, name, unit, mrp, price, discount, c
                         <LuTimer className="h-3 w-3 flex-shrink-0" />
                         <span className="text-[9px] font-bold uppercase tracking-wide text-gray-900">{estimatedTime ? `${formatDeliveryTime(parseInt(estimatedTime))}` : `8 mins`}</span>
                     </div>
-                    <span className="font-sans font-semibold text-sm line-clamp-2 mt-1 ">{name || "Britannia Vita rich Sandwich White Bread"}</span>
+                    <span className="font-sans font-semibold text-sm line-clamp-2 mt-1 capitalize">{name || ""}</span>
                     <div className="mt-auto">
                         <span className="text-xs text-gray-500">{unit || '500g'}</span>
                         <div className="flex justify-between items-center mt-2">

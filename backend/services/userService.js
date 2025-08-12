@@ -1,5 +1,6 @@
 import User from '../models/User.js'
 import OTPModel from '../models/Otp.js'
+import Address from '../models/Address.js'
 import { sendOtpViaSMS } from '../utils/twilio.js'
 import { createAccessToken, createRefreshToken } from '../utils/token.js'
 
@@ -51,4 +52,22 @@ export const loginWithPhoneService = async (userDetails) => {
 
 
     return { status: 201, success: true, message: "User created successfully", user: { user, accessToken: accessToken } };
+};
+
+
+export const addAddressService = async (addressData) => {
+    try {
+        const newAddress = new Address(addressData);
+        return await newAddress.save();
+    } catch (error) {
+        throw new Error("Database error while adding address");
+    }
+};
+
+export const getUserAddressesService = async (userId) => {
+    try {
+        return await Address.find({ user: userId });
+    } catch (error) {
+        throw new Error("Database error while fetching addresses");
+    }
 };

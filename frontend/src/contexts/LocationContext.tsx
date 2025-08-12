@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
-
+type LocationFeature = {
+  properties: {
+    formatted: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    street?: string;
+  };
+  geometry: {
+    coordinates: [number, number];
+  };
+};
 // define context type
 interface LocationContextType {
   openLocationBox: boolean;
@@ -9,6 +20,12 @@ interface LocationContextType {
   setSelectedLocation: Dispatch<SetStateAction<string>>;
   estimatedTime: string;
   setEstimatedTime: Dispatch<SetStateAction<string>>;
+  openAddressWindow: boolean;
+  setOpenAddressWindow: Dispatch<SetStateAction<boolean>>;
+  selectedAddress: LocationFeature | null;
+  setSelectedAddress: Dispatch<SetStateAction<LocationFeature | null>>;
+  address: string;
+  setAddress: Dispatch<SetStateAction<string>>;
 }
 
 // creating context
@@ -20,6 +37,10 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
   const [selectedLocation, setSelectedLocation] = useState<string>('');
 
   const [estimatedTime, setEstimatedTime] = useState<string>('');
+
+  const [openAddressWindow, setOpenAddressWindow] = useState<boolean>(false)
+  const [address, setAddress] = useState<string>('');
+  const [selectedAddress, setSelectedAddress] = useState<LocationFeature | null>(null)
 
   useEffect(() => {
     const storedTime = localStorage.getItem("estimatedTime");
@@ -43,7 +64,12 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
       setSelectedLocation,
       estimatedTime,
       setEstimatedTime,
-
+      openAddressWindow,
+      setOpenAddressWindow,
+      selectedAddress,
+      setSelectedAddress,
+      address,
+      setAddress,
     }}>
       {children}
     </LocationContext.Provider>

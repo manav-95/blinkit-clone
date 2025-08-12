@@ -151,8 +151,8 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ title, category }) =>
                                 slidesPerGroup: 3,
                             },
                             1024: {
-                                slidesPerView: 5,
-                                slidesPerGroup: 5,
+                                slidesPerView: 6,
+                                slidesPerGroup: 6,
                             },
                             1440: {
                                 slidesPerView: 6,
