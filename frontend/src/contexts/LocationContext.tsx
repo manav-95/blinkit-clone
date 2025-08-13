@@ -26,6 +26,8 @@ interface LocationContextType {
   setSelectedAddress: Dispatch<SetStateAction<LocationFeature | null>>;
   address: string;
   setAddress: Dispatch<SetStateAction<string>>;
+  newAddressAdded: boolean;
+  setNewAddressAdded: Dispatch<SetStateAction<boolean>>;
 }
 
 // creating context
@@ -41,6 +43,7 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
   const [openAddressWindow, setOpenAddressWindow] = useState<boolean>(false)
   const [address, setAddress] = useState<string>('');
   const [selectedAddress, setSelectedAddress] = useState<LocationFeature | null>(null)
+  const [newAddressAdded, setNewAddressAdded] = useState<boolean>(false)
 
   useEffect(() => {
     const storedTime = localStorage.getItem("estimatedTime");
@@ -70,6 +73,8 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
       setSelectedAddress,
       address,
       setAddress,
+      newAddressAdded,
+      setNewAddressAdded,
     }}>
       {children}
     </LocationContext.Provider>

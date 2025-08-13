@@ -18,6 +18,7 @@ import AccountLayout from "./layouts/AccountLayout"
 import Addresses from "./pages/Addresses"
 import MyOrders from "./pages/MyOrders"
 import FAQ from "./pages/FAQ"
+import CompleteOrder from "./pages/CompleteOrder"
 
 function App() {
 
@@ -40,6 +41,9 @@ function App() {
             <Route path="my-orders" element={<MyOrders />} />
             <Route path="faq" element={<FAQ />} />
           </Route>
+
+          <Route path="/complete-order" element={<CompleteOrder />} />
+
         </Route>
 
 

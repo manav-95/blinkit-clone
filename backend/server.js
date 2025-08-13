@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import cloudinaryRoute from './routes/cloudinaryRoute.js'
 import productRoute from './routes/productRoute.js'
 import userRoute from './routes/userRoute.js'
+import orderRoute from './routes/orderRoute.js'
 import { verifyAccessToken } from './middlewares/authMiddleware.js';
 
 dotenv.config();
@@ -55,6 +56,7 @@ app.post('/api/admin/login', (req, res) => {
 app.use('/api/cloudinary', cloudinaryRoute);
 app.use('/api/products', productRoute);
 app.use('/api/users', userRoute);
+app.use('/api/orders', orderRoute);
 
 const PORT = process.env.PORT || 5000;
 

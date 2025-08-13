@@ -6,5 +6,6 @@ export default defineConfig({
   plugins: [react()],
   define: {
     baseUrl: JSON.stringify("http://localhost:5000/api"),
+    RAZORPAY_KEY: JSON.stringify('rzp_test_FwrSdkCJprfxIM')
   },
 })

@@ -19,7 +19,7 @@ if (token) {
 }
 
 const AddressForm = () => {
-    const { setOpenAddressWindow, address } = useLocation()
+    const { setOpenAddressWindow, address, setNewAddressAdded } = useLocation()
     const [selectedType, setSelectedType] = useState<string>('Home')
     const [formData, setFormData] = useState({
         addressType: 'Home',
@@ -93,6 +93,7 @@ const AddressForm = () => {
                 })
 
                 alert("Form Data Successfully Submitted")
+                setNewAddressAdded(true)
                 setOpenAddressWindow(false);
             }
 

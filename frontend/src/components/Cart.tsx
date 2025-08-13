@@ -1,12 +1,12 @@
 import { useRef, useEffect, useState } from 'react'
 
 import { useCart } from '../contexts/CartContext'
-import { FaX } from 'react-icons/fa6';
+import { FaLocationDot, FaPerson, FaX } from 'react-icons/fa6';
 import { BiSolidFoodMenu } from 'react-icons/bi';
 import { GiScooter } from 'react-icons/gi';
-import { IoInformationCircleOutline } from 'react-icons/io5';
+import { IoInformationCircleOutline, IoPerson } from 'react-icons/io5';
 import { BsHandbagFill } from 'react-icons/bs';
-import { FaChevronRight, FaMinus, FaPlus } from 'react-icons/fa';
+import { FaChevronRight, FaMinus, FaPhoneAlt, FaPlus } from 'react-icons/fa';
 
 import { useLocation } from "../contexts/LocationContext";
 import { formatDeliveryTime } from '../utils/FormatDeliveryTime'
@@ -19,6 +19,7 @@ import MapWithCenterPointer from './MapWithCenterPointer'
 import AddressForm from './AddressForm';
 
 import { jwtDecode } from 'jwt-decode'
+import { useNavigate } from 'react-router-dom';
 
 
 interface CartItemType {
@@ -70,7 +71,9 @@ type UserAddressesType = {
 const Cart = () => {
 
     const { cartOpen, setCartOpen, cart, updateQuantity, DeliveryCharge, discountedTotalPrice, originalTotal, savedAmount } = useCart();
-    const { estimatedTime, openAddressWindow, setOpenAddressWindow } = useLocation();
+    const { estimatedTime, openAddressWindow, setOpenAddressWindow, newAddressAdded } = useLocation();
+
+    const navigate = useNavigate();
 
     const { setLoginBox, loggedIn } = useAuth();
 
@@ -158,12 +161,13 @@ const Cart = () => {
         }
 
         getUserAddresses();
-    }, [addressStep])
+    }, [addressStep, newAddressAdded])
 
 
     useEffect(() => {
         if (selectedAddressToProceed) {
             console.log(selectedAddressToProceed)
+            localStorage.setItem("selectedAddress", JSON.stringify(selectedAddressToProceed))
         }
     }, [selectedAddressToProceed])
 
@@ -310,7 +314,12 @@ const Cart = () => {
                                         {/* Grand Total */}
                                         <div className='flex justify-between items-center'>
                                             <span className='font-semibold'>Grand total</span>
-                                            <span className='text-base font-medium'>₹{discountedTotalPrice + 2}</span>
+                                            <span className='text-base font-medium'>
+                                                {discountedTotalPrice > 99
+                                                    ? <span>₹{discountedTotalPrice + 2}</span>
+                                                    : <span>₹{discountedTotalPrice + 2 + DeliveryCharge}</span>
+                                                }
+                                            </span>
                                         </div>
                                     </div>
 
@@ -364,28 +373,60 @@ const Cart = () => {
                         <div className='px-4 py-4 bg-gray-100 h-full font-poppins'>
                             <button
                                 onClick={() => setOpenAddressWindow(true)}
-                                className='w-full flex justify-start items-center space-x-2 rounded-lg px-4 py-2.5 font-poppins text-sm bg-white'>
+                                className='text-darkGreen w-full flex justify-start items-center space-x-2 rounded-lg px-4 py-2.5 font-poppins text-sm bg-white'>
                                 <LuPlus className='h-5 w-5' />
                                 <span>Add a new address</span>
                             </button>
                             <div className='my-2 font-poppins text-sm'>
                                 <span className='text-gray-500'>Your Saved Addresses</span>
-                                <div className='flex flex-col space-y-2 my-2'>
-                                    {userAddresses.map((item, index) =>
-                                        <button
-                                            onClick={() => {
-                                                setSelectedAddressToProceed(item);
-                                            }}
-                                            key={index}
-                                            className={` ${selectedAddressToProceed === item ? 'bg-darkGreen text-white' : 'bg-white'} rounded-lg text-xs text-start flex flex-col px-4 py-2 space-y-1`}
-                                        >
-                                            <span className={`${selectedAddressToProceed === item ? 'text-white' : 'text-darkGreen'}`}>{item?.addressType}</span>
-                                            <span>{item?.area}</span>
-                                            <span>{item?.name}</span>
-                                            <span>{item?.phone}</span>
-                                        </button>
-                                    )}
+                                <div className="grid grid-cols-1 gap-3 my-3">
+                                    {userAddresses.map((item, index) => {
+                                        const isSelected = selectedAddressToProceed === item;
+                                        return (
+                                            <button
+                                                onClick={() => setSelectedAddressToProceed(item)}
+                                                key={index}
+                                                className={`transition-all duration-300 rounded-xl border shadow-sm px-4 py-2 text-left space-y-2 relative
+          ${isSelected ? 'border-darkGreen bg-darkGreen text-white shadow-md scale-[1.02]' : 'border-gray-200 bg-white hover:shadow-md hover:border-darkGreen/50'}
+        `}
+                                            >
+                                                {/* Address Type Tag */}
+                                                <span
+                                                    className={`px-3 py-1 text-xs font-medium rounded-full absolute bottom-2 right-2
+            ${isSelected ? 'bg-white text-darkGreen' : 'bg-darkGreen/10 text-darkGreen'}
+          `}
+                                                >
+                                                    {item?.addressType}
+                                                </span>
+
+                                                {/* Area */}
+                                                <div className="flex items-start text-xs">
+                                                    <FaLocationDot
+                                                        className={`h-4 w-4 mr-2 mt-0.5 flex-shrink-0 ${isSelected ? 'text-white' : 'text-darkGreen'}`}
+                                                    />
+                                                    <span>{item?.area}</span>
+                                                </div>
+
+                                                {/* Name */}
+                                                <div className="flex items-center text-xs">
+                                                    <IoPerson
+                                                        className={`h-4 w-4 mr-2 ${isSelected ? 'text-white' : 'text-darkGreen'}`}
+                                                    />
+                                                    <span>{item?.name}</span>
+                                                </div>
+
+                                                {/* Phone */}
+                                                <div className="flex items-center text-xs">
+                                                    <FaPhoneAlt
+                                                        className={`h-4 w-4 mr-2 ${isSelected ? 'text-white' : 'text-darkGreen'}`}
+                                                    />
+                                                    <span>{item?.phone}</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
+
                             </div>
                         </div>
 
@@ -393,6 +434,11 @@ const Cart = () => {
                         <div className='absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-xl -translate-x-2 px-4 py-6 z-10'>
                             <button
                                 disabled={!selectedAddressToProceed}
+                                onClick={() => {
+                                    setAddressStep(false)
+                                    setCartOpen(false)
+                                    navigate('/complete-order')
+                                }}
                                 className={`${selectedAddressToProceed !== null ? 'bg-darkGreen text-white' : 'bg-gray-400 text-white'} flex justify-between items-center min-w-full px-4 py-2 rounded-xl`}
                             >
                                 <div className='flex flex-col justify-center -space-y-0.5'>
@@ -400,7 +446,7 @@ const Cart = () => {
                                     <span className='font-poppins font-light text-sm tracking-wide text-gray-200'>TOTAL</span>
                                 </div>
                                 <div>
-                                    <span className='font-poppins flex items-center capitalize'>select an address to proceed<FaChevronRight className='ml-1 h-3 w-3' /></span>
+                                    <span className='font-poppins w-full flex items-center capitalize'>{selectedAddressToProceed ? 'Proceed' : 'select an address to proceed'}<FaChevronRight className='ml-1 h-3 w-3' /></span>
                                 </div>
                             </button>
                         </div>
