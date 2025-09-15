@@ -16,10 +16,27 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-    origin: 'https://shop-quick.onrender.com',
-     credentials: true,
-}));
+
+
+
+const allowedOrigins = [
+    "http://localhost:5173",            // dev
+    "https://shop-quick-frontend.onrender.com", // your frontend domain
+    "https://shop-quick.onrender.com",  // if backend and frontend are same
+];
+
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
+        credentials: true,
+    })
+);
 
 app.get('/protected', verifyAccessToken, (req, res) => {
     res.json({ success: true, message: `Welcome, user ${req.user.phone}` });
