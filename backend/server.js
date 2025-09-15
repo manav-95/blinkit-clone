@@ -38,6 +38,11 @@ app.use(
     })
 );
 
+app.get("/debug/env", (req, res) => {
+  res.json({ mongo: process.env.MONGO_DB_URI ? "loaded" : "missing" });
+});
+
+
 app.get('/protected', verifyAccessToken, (req, res) => {
     res.json({ success: true, message: `Welcome, user ${req.user.phone}` });
 });
