@@ -19,6 +19,7 @@
     "express": "^5.1.0",
     "express-formidable": "^1.2.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.19.0",
     "mongoose": "^8.3.2",
     "multer": "^2.0.1",
     "twilio": "^5.7.3"
