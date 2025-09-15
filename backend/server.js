@@ -21,6 +21,7 @@ app.use(cookieParser());
 
 const allowedOrigins = [
     "http://localhost:5173",            // dev
+    "https://shop-quick.netlify.app",
     "https://shop-quick-frontend.onrender.com", // your frontend domain
     "https://shop-quick.onrender.com",  // if backend and frontend are same
 ];
